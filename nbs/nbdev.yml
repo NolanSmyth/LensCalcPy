@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "LensCalcPy"
+  site-url: "https://NolanSmyth.github.io/LensCalcPy"
+  description: "Calculate Microlensing Observables"
+  repo-branch: main
+  repo-url: "https://github.com/NolanSmyth/LensCalcPy"
