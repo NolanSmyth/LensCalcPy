@@ -5,6 +5,7 @@ __all__ = ['Pbh']
 
 # %% ../nbs/00_pbh.ipynb 3
 from .parameters import *
+import numpy as np
 
 # %% ../nbs/00_pbh.ipynb 4
 class Pbh:
@@ -40,4 +41,26 @@ class Pbh:
             float: PBH density in Msol/kpc^-3
         """
         return rhoc / ((r/rs)*1 + r/rs)**2 * self.f_dm
+    
+    def mass_enclosed(self, r: float) -> float:
+        """PBH mass enclosed within a given distance from the Milky Way center
+
+        Args:
+            r (float): distance in kpc
+
+        Returns:
+            float: PBH mass in Msol
+        """
+        return 4*np.pi * rhoc * rs**3 * (np.log(r + r/rs) - (r/rs)/(1 + r/rs))
+    
+    def velocity_dispersion(self, r: float) -> float:
+        """PBH velocity dispersion at a given distance from the Milky Way center
+
+        Args:
+            r (float): distance in kpc
+
+        Returns:
+            float: PBH velocity dispersion in km/s
+        """
+        return np.sqrt(G * self.mass_enclosed(r) / r) 
     

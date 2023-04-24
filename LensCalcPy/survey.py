@@ -21,6 +21,8 @@ class Survey:
         self.source_dist = source_dist 
         self.earth_dist = 8.5 
         self.obs_time = obs_time 
+        self.pbh = None # PBH population
+        self.ffp = None # FFP population
 
     def __str__(self) -> str:
         return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist})"
@@ -30,5 +32,12 @@ class Survey:
         """returns the distance to the Milky Way center in kpc of a point a distance d to the Sun in kpc"""
         return np.sqrt(d**2 + self.earth_dist**2 - 2*d*self.earth_dist*np.cos(np.radians(self.l))*np.cos(np.radians(self.b)))
     
-
+    def add_pbh(self, 
+                m_pbh: float = 1, # mass of each PBH in solar masses
+                f_dm: float = 1 # fraction of DM in PBHs
+                ):
+        """adds a PBH population to the survey"""
+        self.pbh = Pbh(m_pbh, f_dm)
+        return
+    
 
