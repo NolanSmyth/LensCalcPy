@@ -9,7 +9,7 @@ from .utils import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import nquad
-
+from scipy.interpolate import interp1d
 
 
 # %% ../nbs/01_ffp.ipynb 5
