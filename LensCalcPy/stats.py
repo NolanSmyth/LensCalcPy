@@ -28,7 +28,7 @@ def generate_observed_counts_with_bump(bin_centers, a, index, bump_position, bum
     power_law_counts[closest_bin] += bump_height
     return np.random.poisson(power_law_counts)
 
-# %% ../nbs/06_stats.ipynb 11
+# %% ../nbs/06_stats.ipynb 7
 # Define the negative log-likelihood function for optimization with continuous bump_position
 def neg_log_likelihood(params, bin_centers, observed_counts):
     a, index, bump_position, bump_height = params
@@ -48,7 +48,7 @@ def get_MLE_params(bin_centers, observed_counts):
     return optimized_params_bump
 
 
-# %% ../nbs/06_stats.ipynb 13
+# %% ../nbs/06_stats.ipynb 9
 def llr_test(bin_centers, observed_counts):
 
     optimized_params = get_MLE_params(bin_centers, observed_counts)

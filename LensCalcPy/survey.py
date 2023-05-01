@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['Survey']
 
-# %% ../nbs/03_survey.ipynb 3
+# %% ../nbs/03_survey.ipynb 4
 class Survey:
     """
     A class to represent a survey.
@@ -13,7 +13,8 @@ class Survey:
                  l:float, # Galactic longitude in degrees
                  b: float, # Galactic latitude in degrees
                  source_dist:float, # Distance to observation source in kpc
-                 obs_time: float # Observation time in hours
+                 obs_time: float, # Observation time in hours
+                 survey_area: float, # Survey area in deg^2
                  ):
      
         self.l = l 
@@ -21,16 +22,14 @@ class Survey:
         self.source_dist = source_dist 
         self.earth_dist = 8.5 
         self.obs_time = obs_time 
+        self.survey_area = survey_area
         self.pbh = None # PBH population
         self.ffp = None # FFP population
 
     def __str__(self) -> str:
-        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist})"
+        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time})"
     __repr__ = __str__
     
-    def dist_mw(self, d):
-        """returns the distance to the Milky Way center in kpc of a point a distance d to the Sun in kpc"""
-        return np.sqrt(d**2 + self.earth_dist**2 - 2*d*self.earth_dist*np.cos(np.radians(self.l))*np.cos(np.radians(self.b)))
     
     def add_pbh(self, 
                 m_pbh: float = 1, # mass of each PBH in solar masses
@@ -40,4 +39,63 @@ class Survey:
         self.pbh = Pbh(m_pbh, f_dm)
         return
     
+    def add_ffp(self,
+                mlow: float, # lower mass bound of FFPs in solar masses
+                alpha: float, # power law index of FFP mass function
+                ):
+        """adds a FFP population to the survey"""
+        self.ffp = Ffp(mlow, alpha)
+    
+    def num_pbh(self) -> float:
+        """returns the number of PBHs in the line of sight"""
+         # Obtain survey area, center latitude, and center longitude
+        b_radian = b * np.pi / 180  # rad
+        l_radian = l * np.pi / 180  # rad
+        surveyArea = float(ebf_log["surveyArea"])  # deg^2
+
+        # Calculate the field of view for the current field
+        field_of_view_radius = (surveyArea / np.pi) ** (1 / 2)
+
+        # Generate an array of heliocentric radii
+        # (Just used to numerically integrate the line-of-sight density)
+        n_lin = 100000
+        r_h_linspace = np.linspace(0, r_max, num=n_lin)
+
+        # Represent the line-of-sight line as galactic coordinates
+        galactic_lin = coord.Galactic(
+            l=l_radian * units.rad,
+            b=b_radian * units.rad,
+            distance=r_h_linspace * units.kpc,
+        )
+
+        # Transform the line-of-sight into to galactocentric coordinates
+        # (Outputs l, b, and distance [units: deg, deg, kpc])
+        galacto_lin = galactic_lin.transform_to(
+            coord.Galactocentric(representation_type="spherical")
+        )
+
+        # Determine dark matter density at all galactocentric radii along the line-of-sight
+        # todo the ffp density will track the stellar density more closely than the DM density.
+        rho_lin = rho_dmhalo(
+            galacto_lin.spherical.distance.value, rho_0=rho_0, r_s=r_s, gamma=gamma
+        )
+
+        # Estimate the total mass within the line-of-sight cylinder [units: M_sun kpc**-2]
+        # Total mass = projected line-of-sight density x projected line-of-sight area
+        rho_marg_r = np.trapz(rho_lin, dx=(r_max) / n_lin) * 1000**3
+        print(
+            "Projected density along line-of-sight = {0:0.2e} [M_sun kpc**-2]".format(
+                rho_marg_r
+            )
+        )
+        # Determine line-of-sight cylinder radius, assuming small angle approximation [units: kpc]
+        r_proj_los_cyl = field_of_view_radius * np.pi / 180 * (r_max)
+        # Get projected area of the LOS cylinder [units: kpc**2]
+        area_proj_los_cyl = np.pi * r_proj_los_cyl**2
+        # Get the total mass within the line-of-sight cylinder
+        mass_los_cyl = rho_marg_r * area_proj_los_cyl
+        print("Mass within line-of-sight cylinder = {0:0.2e} [M_sun]".format(mass_los_cyl))
+
+        # Get the total number of black holes to randomly draw
+        n_pbh = int(np.round(self.pbh._dm * mass_los_cyl / pbh_mass))
 
