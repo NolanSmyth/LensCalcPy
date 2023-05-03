@@ -14,7 +14,7 @@ c = 2.98e5 # km/s
 fpbh = 1 # fraction of dark matter in PBHs
 ut = 1 # threshold impact parameter
 survey_area = 0.16 # survey area in square degrees
-obsTime = 7 # observation time in hours
+obsTime = 1825*24 # observation time in hours
 kpctokm = 3e16 # kpc to km
 htosec = 60*60 # hours to seconds
 
@@ -33,8 +33,8 @@ rsol = 8.160  # solar position, kpc
 rdBreak = 5.3  # kpc, turnover point for density profile
 rthin = 2.6  # kpc
 rthick = 2.2  # kpc
-rho_thin_Sol = 4.2e-2 * (1e-3)**3  # local solar thin disk density main sequence stars, Msol kpc^-3
-rho_thick_Sol = 1.7e-3 * (1e-3)**3  # Msol kpc^-3
+rho_thin_Sol = 4.2e-2 * (1e3)**3  # local solar thin disk density main sequence stars, Msol kpc^-3
+rho_thick_Sol = 1.7e-3 * (1e3)**3  # Msol kpc^-3
 
 # Bulge Params
 x0 = 0.67  # kpc
@@ -42,7 +42,7 @@ y0 = 0.28  # kpc
 z0 = 0.24  # kpc
 cperp = 1.4
 cpar = 3.3  # kpc
-rho0_B = 9.72 * (1e-3)**3  # msol kpc^-3
+rho0_B = 9.72 * (1e3)**3  # msol kpc^-3
 
 Rc = 2.8  # kpc
 alphabar = 27 # degrees

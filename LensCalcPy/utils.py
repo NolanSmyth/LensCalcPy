@@ -2,8 +2,7 @@
 
 # %% auto 0
 __all__ = ['density_nfw', 'mass_enclosed_nfw', 'dist', 'einstein_rad', 'dist_mw', 'velocity_dispersion', 'velocity_radial',
-           'get_primed_coords', 'scientific_format', 'zthin', 'rho_thin', 'rho_thick', 'rsf', 'fE', 'cut', 'rho_bulge',
-           'rho_FFPs']
+           'get_primed_coords', 'scientific_format']
 
 # %% ../nbs/04_utils.ipynb 3
 from .parameters import *
@@ -64,61 +63,3 @@ def scientific_format(x, pos):
     a, b = '{:.1e}'.format(x).split('e')
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
-
-# %% ../nbs/04_utils.ipynb 5
-# Disk Density
-def zthin(r):
-    if r > 4.5:
-        return zthinSol - (zthinSol - zthin45) * (rsol - r) / (rsol - 4.5)
-    else:
-        return zthin45
-
-def rho_thin(r, z):
-    if r > rdBreak:
-        return rho_thin_Sol * zthinSol / zthin(r) * \
-            np.exp(-((r - rsol) / rthin)) * (1 / np.cos(np.abs(z) / zthin(r)))**2
-    else:
-        return rho_thin_Sol * zthinSol / zthin(r) * \
-            np.exp(-((rdBreak - rsol) / rthin)) * (1 / np.cos(np.abs(z) / zthin(r)))**2
-
-def rho_thick(r, z):
-    if r > rdBreak:
-        return rho_thick_Sol * np.exp(-((r - rsol) / rthick)) * \
-            np.exp(-(np.abs(z) / zthickSol))
-    else:
-        return rho_thick_Sol * np.exp(-((rdBreak - rsol) / rthick)) * \
-            np.exp(-(np.abs(z) / zthickSol))
-
-# Bulge Density
-def rsf(xp, yp, zp):
-    R = (xp**cperp / x0**cperp + yp**cperp / y0**cperp)**(cpar/cperp) + (zp / z0)**cpar
-    return R**(1/cpar)
-
-def fE(xp, yp, zp):
-    return np.exp(-rsf(xp, yp, zp))
-
-def cut(x):
-    if x > 0:
-        return np.exp(-x**2)
-    else:
-        return 1
-
-def rho_bulge(xp, yp, zp):
-    R = (xp**2 + yp**2 + zp**2)**0.5
-    return rho0_B * fE(xp, yp, zp) * cut((R - Rc) / 0.5)
-
-def rho_bulge(d):
-    xp, yp = get_primed_coords(d)
-    zp = 0
-    R = (xp**2 + yp**2 + zp**2)**0.5
-    return rho0_B * fE(xp, yp, zp) * cut((R - Rc) / 0.5)
-
-# Total FFP Density
-def rho_FFPs(d: float, # distance from Sun in kpc
-             ) -> float: # FFP density in Msun/kpc^3
-    #! Check units here
-    r = dist_mw(d)
-    z = 0
-    return rho_thin(r, z) + rho_thick(r, z) + rho_bulge(d)
-
-

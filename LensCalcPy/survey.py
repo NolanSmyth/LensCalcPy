@@ -9,7 +9,6 @@ from .pbh import *
 from .ffp import *
 from .utils import *
 from .parameters import *
-from .stats import *
 import astropy.coordinates as coord
 from astropy import units
 import matplotlib.pyplot as plt
@@ -28,6 +27,7 @@ class Survey:
                  survey_area: float, # Survey area in deg^2
                  n_pbh: int = int(1e2), # Number of PBHs detected
                  n_ffp: int = int(1e4), # Number of FFPs detected
+                 n_sources: int = int(1e7), # Number of sources observed in survey
                  ):
      
         self.l = l 
@@ -40,6 +40,7 @@ class Survey:
         self.ffp = None # FFP population
         self.n_pbh = n_pbh # Number of PBHs detected
         self.n_ffp = n_ffp # Number of FFPs detected
+        self.n_sources = n_sources # Number of sources observed in the Milky Way
 
     def __str__(self) -> str:
         return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, survey_area={self.survey_area})"
@@ -52,17 +53,14 @@ class Survey:
                 ):
         """adds a PBH population to the survey"""
         self.pbh = Pbh(m_pbh, f_dm)
-        # self.n_pbh = self.num_pbh()
         return
     
     def add_ffp(self,
                 mlow: float, # lower mass bound of FFPs in solar masses
                 alpha: float, # power law index of FFP mass function
-                n_ffp: int = int(1e4), # number of FFPs detected
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(mlow, alpha, )
-        self.n_ffp = n_ffp
+        self.ffp = Ffp(mlow, alpha)
     
     def num_pbh(self) -> float:
 
@@ -102,7 +100,6 @@ class Survey:
         # Estimate the total mass within the line-of-sight cylinder [units: M_sun kpc**-2]
         # Total mass = projected line-of-sight density x projected line-of-sight area
         rho_marg_r = np.trapz(rho_lin, dx=(r_max) / n_lin) 
-
         
         # Determine line-of-sight cylinder radius, assuming small angle approximation [units: kpc]
         r_proj_los_cyl = field_of_view_radius * np.pi / 180 * (r_max)
@@ -132,8 +129,31 @@ class Survey:
         if self.ffp is None:
             raise ValueError("FFP population not defined")
         
-        rates_pbh = [self.pbh.differential_rate(t) for t in t_es]
-        
-        return rates_pbh
-        
+        rates_pbh = np.array([self.pbh.differential_rate(t) for t in t_es])
+        rates_ffp = np.array([self.ffp.differential_rate(t) for t in t_es])
+    
+        #return separately for testing
+        return rates_pbh, rates_ffp
+    
+    def get_events_observed(self,
+                            t_es: np.ndarray,
+                            ) -> np.ndarray:
 
+        
+        rates_pbh, rates_ffp = self.get_crossing_time_rates(t_es)
+        
+        num_pbh_obs = rates_pbh * self.n_sources * self.obs_time 
+        num_ffp_obs = rates_ffp * self.n_sources * self.obs_time
+        
+        return num_pbh_obs, num_ffp_obs
+    
+    def get_num_events(self,
+                       t_es: np.ndarray,
+                       ) -> np.ndarray:
+       
+        num_pbh_obs, num_ffp_obs = self.get_events_observed(t_es)
+        
+        num_pbh = t_es * num_pbh_obs
+        num_ffp = t_es * num_ffp_obs
+        
+        return np.around(num_pbh), np.around(num_ffp)
