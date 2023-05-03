@@ -3,7 +3,18 @@
 # %% auto 0
 __all__ = ['Survey']
 
-# %% ../nbs/03_survey.ipynb 4
+# %% ../nbs/03_survey.ipynb 3
+import numpy as np
+from .pbh import *
+from .ffp import *
+from .utils import *
+from .parameters import *
+from .stats import *
+import astropy.coordinates as coord
+from astropy import units
+import matplotlib.pyplot as plt
+
+# %% ../nbs/03_survey.ipynb 5
 class Survey:
     """
     A class to represent a survey.
@@ -15,6 +26,8 @@ class Survey:
                  source_dist:float, # Distance to observation source in kpc
                  obs_time: float, # Observation time in hours
                  survey_area: float, # Survey area in deg^2
+                 n_pbh: int = int(1e2), # Number of PBHs detected
+                 n_ffp: int = int(1e4), # Number of FFPs detected
                  ):
      
         self.l = l 
@@ -25,36 +38,45 @@ class Survey:
         self.survey_area = survey_area
         self.pbh = None # PBH population
         self.ffp = None # FFP population
+        self.n_pbh = n_pbh # Number of PBHs detected
+        self.n_ffp = n_ffp # Number of FFPs detected
 
     def __str__(self) -> str:
-        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time})"
+        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, survey_area={self.survey_area})"
     __repr__ = __str__
     
     
     def add_pbh(self, 
                 m_pbh: float = 1, # mass of each PBH in solar masses
-                f_dm: float = 1 # fraction of DM in PBHs
+                f_dm: float = 1, # fraction of DM in PBHs
                 ):
         """adds a PBH population to the survey"""
         self.pbh = Pbh(m_pbh, f_dm)
+        # self.n_pbh = self.num_pbh()
         return
     
     def add_ffp(self,
                 mlow: float, # lower mass bound of FFPs in solar masses
                 alpha: float, # power law index of FFP mass function
+                n_ffp: int = int(1e4), # number of FFPs detected
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(mlow, alpha)
+        self.ffp = Ffp(mlow, alpha, )
+        self.n_ffp = n_ffp
     
     def num_pbh(self) -> float:
+
         """returns the number of PBHs in the line of sight"""
+
+        if self.pbh is None:
+            raise ValueError("PBH population not defined")
+        
          # Obtain survey area, center latitude, and center longitude
         b_radian = b * np.pi / 180  # rad
         l_radian = l * np.pi / 180  # rad
-        surveyArea = float(ebf_log["surveyArea"])  # deg^2
 
         # Calculate the field of view for the current field
-        field_of_view_radius = (surveyArea / np.pi) ** (1 / 2)
+        field_of_view_radius = (self.survey_area / np.pi) ** (1 / 2)
 
         # Generate an array of heliocentric radii
         # (Just used to numerically integrate the line-of-sight density)
@@ -75,27 +97,43 @@ class Survey:
         )
 
         # Determine dark matter density at all galactocentric radii along the line-of-sight
-        # todo the ffp density will track the stellar density more closely than the DM density.
-        rho_lin = rho_dmhalo(
-            galacto_lin.spherical.distance.value, rho_0=rho_0, r_s=r_s, gamma=gamma
-        )
+        rho_lin = density_nfw(galacto_lin.spherical.distance.value)
 
         # Estimate the total mass within the line-of-sight cylinder [units: M_sun kpc**-2]
         # Total mass = projected line-of-sight density x projected line-of-sight area
-        rho_marg_r = np.trapz(rho_lin, dx=(r_max) / n_lin) * 1000**3
-        print(
-            "Projected density along line-of-sight = {0:0.2e} [M_sun kpc**-2]".format(
-                rho_marg_r
-            )
-        )
+        rho_marg_r = np.trapz(rho_lin, dx=(r_max) / n_lin) 
+
+        
         # Determine line-of-sight cylinder radius, assuming small angle approximation [units: kpc]
         r_proj_los_cyl = field_of_view_radius * np.pi / 180 * (r_max)
         # Get projected area of the LOS cylinder [units: kpc**2]
         area_proj_los_cyl = np.pi * r_proj_los_cyl**2
         # Get the total mass within the line-of-sight cylinder
         mass_los_cyl = rho_marg_r * area_proj_los_cyl
-        print("Mass within line-of-sight cylinder = {0:0.2e} [M_sun]".format(mass_los_cyl))
-
         # Get the total number of black holes to randomly draw
-        n_pbh = int(np.round(self.pbh._dm * mass_los_cyl / pbh_mass))
+        n_pbh = int(np.round(self.pbh.f_dm * mass_los_cyl / self.pbh.m_pbh))
+        return n_pbh
+
+    def get_lens_masses(self) -> np.ndarray:
+        """returns an array of lens masses"""
+        if self.pbh is None:
+            raise ValueError("PBH population not defined")
+        if self.ffp is None:
+            raise ValueError("FFP population not defined")
+        print(len(self.ffp.sample_masses), self.n_pbh)
+        return np.concatenate((np.ones(self.n_pbh) * self.pbh.m_pbh, self.ffp.sample_masses))
+    
+    def get_crossing_time_rates(self,
+                                t_es: np.ndarray,
+                                ) -> np.ndarray:
+        """returns an array of crossing times"""
+        if self.pbh is None:
+            raise ValueError("PBH population not defined")
+        if self.ffp is None:
+            raise ValueError("FFP population not defined")
+        
+        rates_pbh = [self.pbh.differential_rate(t) for t in t_es]
+        
+        return rates_pbh
+        
 

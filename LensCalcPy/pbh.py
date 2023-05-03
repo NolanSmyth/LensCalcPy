@@ -48,3 +48,5 @@ class Pbh:
         result, error = nquad(self.differential_rate_integrand, [umin_bounds, d_bounds], args=[t])
 
         return result
+    
+    
