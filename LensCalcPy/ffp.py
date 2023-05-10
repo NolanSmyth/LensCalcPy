@@ -75,11 +75,12 @@ options = {"epsabs": 1e-10, "epsrel": 1e-10}
 
 def dGdt_FFP(t, mFFP):
     def integrand(umin, d):
-        return 1 / (ut**2 - umin**2)**(1/2) * rho_FFPs(d) / \
-               (mFFP * velocity_dispersion(d)**2) * velocity_radial(d, mFFP, umin, t * htosec)**4 * \
-               (htosec / kpctokm)**2 * np.exp(-velocity_radial(d, mFFP, umin, t * htosec)**2 / velocity_dispersion(d)**2)
+        r = dist_mw(d)
+        return 2 / (ut**2 - umin**2)**(1/2) * rho_FFPs(d) / \
+               (mFFP * velocity_dispersion_mw(r)**2) * velocity_radial(d, mFFP, umin, t * htosec)**4 * \
+               (htosec / kpctokm)**2 * np.exp(-velocity_radial(d, mFFP, umin, t * htosec)**2 / velocity_dispersion_mw(r)**2)
     result, _ = nquad(integrand, [(0, ut), (0, rEarth)], opts=options)
-    return 2 * result
+    return result
 
 # %% ../nbs/01_ffp.ipynb 9
 class Ffp:

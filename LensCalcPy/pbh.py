@@ -31,19 +31,51 @@ class Pbh:
         return f"PBH population with m_pbh={self.m_pbh} and f_dm={self.f_dm}"
     __repr__ = __str__
 
-    def density(self, r: float) -> float:
-        return density_nfw(r) * self.f_dm
-
-    def differential_rate_integrand(self, umin, d, t):
+    def density(self, d: float) -> float:
+        rmw = dist_mw(d)
+        rm31 = dist_m31(d)
+        return self.f_dm *(density_mw(rmw) + density_m31(rm31))
+    
+    def differential_rate_integrand_mw(self, umin, d, t):
         r = dist_mw(d)
-        return (1 / (ut**2 - umin**2)**0.5 *
-                self.density(r) / (self.m_pbh * velocity_dispersion(d)**2) *
+        return 2 * (1 / (ut**2 - umin**2)**0.5 *
+                density_mw(r) / (self.m_pbh * velocity_dispersion_mw(r)**2) *
                 velocity_radial(d, self.m_pbh, umin, t * htosec)**4 * (htosec / kpctokm)**2 *
-                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec)**2 / velocity_dispersion(d)**2)))
+                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec)**2 / velocity_dispersion_mw(r)**2)))
+    
+    def differential_rate_integrand_m31(self, umin, d, t):
+        r = dist_m31(d)
+        return 2 * (1 / (ut**2 - umin**2)**0.5 *
+                density_m31(r) / (self.m_pbh * velocity_dispersion_m31(r)**2) *
+                velocity_radial(d, self.m_pbh, umin, t * htosec)**4 * (htosec / kpctokm)**2 *
+                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec)**2 / velocity_dispersion_m31(r)**2)))
+    
+    def differential_rate_integrand(self, umin, d, t):
+        return self.differential_rate_integrand_mw(umin, d, t) + self.differential_rate_integrand_m31(umin, d, t)
+    
+    def differential_rate_mw(self, t):
+        umin_bounds = [0, ut*0.999]
+        d_bounds = [0, ds*0.999]
+
+        result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
+
+        return result
+    
+    def differential_rate_m31(self, t):
+        umin_bounds = [0, ut*0.999]
+        d_bounds = [0, ds*0.999]
+
+        result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
+
+        return result
     
     def differential_rate(self, t):
+        #The integral is a bit sensitive to the bounds, so we have to be careful
+        #For m31 there's a singularity at d=ds
+        # umin_bounds = [0, ut*0.999]
+        # d_bounds = [0, ds*0.999]
         umin_bounds = [0, ut]
-        d_bounds = [0, rEarth]
+        d_bounds = [0, ds]
 
         result, error = nquad(self.differential_rate_integrand, [umin_bounds, d_bounds], args=[t])
 

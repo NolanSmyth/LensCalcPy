@@ -25,9 +25,9 @@ class Survey:
                  source_dist:float, # Distance to observation source in kpc
                  obs_time: float, # Observation time in hours
                  survey_area: float, # Survey area in deg^2
+                 n_sources: int, # Number of sources observed in survey
                  n_pbh: int = int(1e2), # Number of PBHs detected
                  n_ffp: int = int(1e4), # Number of FFPs detected
-                 n_sources: int = int(1e7), # Number of sources observed in survey
                  ):
      
         self.l = l 
@@ -95,7 +95,7 @@ class Survey:
         )
 
         # Determine dark matter density at all galactocentric radii along the line-of-sight
-        rho_lin = density_nfw(galacto_lin.spherical.distance.value)
+        rho_lin = density_mw(galacto_lin.spherical.distance.value)
 
         # Estimate the total mass within the line-of-sight cylinder [units: M_sun kpc**-2]
         # Total mass = projected line-of-sight density x projected line-of-sight area
@@ -120,6 +120,14 @@ class Survey:
         print(len(self.ffp.sample_masses), self.n_pbh)
         return np.concatenate((np.ones(self.n_pbh) * self.pbh.m_pbh, self.ffp.sample_masses))
     
+    def get_crossing_times_rates_pbh(self,
+                                    t_es: np.ndarray,
+                                    ) -> np.ndarray:
+        if self.pbh is None:
+            raise ValueError("PBH population not defined")
+        
+        return np.array([self.pbh.differential_rate(t) for t in t_es])
+    
     def get_crossing_time_rates(self,
                                 t_es: np.ndarray,
                                 ) -> np.ndarray:
@@ -134,6 +142,7 @@ class Survey:
     
         #return separately for testing
         return rates_pbh, rates_ffp
+    
     
     def get_events_observed(self,
                             t_es: np.ndarray,
