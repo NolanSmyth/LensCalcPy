@@ -3,11 +3,18 @@
 # %% auto 0
 __all__ = ['dist_mw', 'dist_m31', 'density_mw', 'density_m31', 'mass_enclosed_mw', 'mass_enclosed_m31', 'velocity_dispersion_mw',
            'velocity_dispersion_m31', 'dist', 'einstein_rad', 'velocity_radial', 'get_primed_coords',
-           'scientific_format']
+           'scientific_format', 'w_func', 'rho_func', 'magnification', 'magnification_wave', 'displacement',
+           'integrand_polar_wave', 'integrand_polar', 'magnification_finite_wave', 'magnification_finite', 'u_t_finite',
+           'u_t_finite_wave']
 
 # %% ../nbs/04_utils.ipynb 3
 from .parameters import *
 import numpy as np
+from numpy import pi
+from scipy.integrate import quad, nquad
+from scipy.optimize import brentq
+
+import matplotlib.pyplot as plt
 
 # %% ../nbs/04_utils.ipynb 4
 def dist_mw(d: float, # distance from the Sun in kpc
@@ -28,11 +35,11 @@ def density_m31(r: float, # distance to M31 center in kpc
 
 def mass_enclosed_mw(r: float  # distance to MW center in kpc
                       ) -> float : # enclosed DM mass in Msun
-    return 4*np.pi * rhoc * rs**3 * (np.log(1 + r/rs) - (r/rs)/(1 + r/rs))
+    return 4*pi * rhoc * rs**3 * (np.log(1 + r/rs) - (r/rs)/(1 + r/rs))
 
 def mass_enclosed_m31(r: float  # distance to M31 center in kpc
                         ) -> float : # enclosed DM mass in Msun
-    return 4*np.pi * rhocM31 * rsM31**3 * (np.log(1 + r/rsM31) - (r/rsM31)/(1 + r/rsM31))
+    return 4*pi * rhocM31 * rsM31**3 * (np.log(1 + r/rsM31) - (r/rsM31)/(1 + r/rsM31))
 
 def velocity_dispersion_mw(r: float, # distance from the MW center in kpc
                         ) -> float: # velocity dispersion in km/s
@@ -49,13 +56,14 @@ def dist(d: float # distance from the Sun in kpc
 def einstein_rad(d: float, # distance from the Sun in kpc
                  mass: float, # mass of the lens in Msun
                  ) -> float:
-    return np.real((4 * G * mass * dist(d)/c**2)**(1/2))
+    return (4 * G * mass * dist(d)/c**2)**(1/2)
 
 
 def velocity_radial(d: float, # distance from the Sun in kpc
                     mass: float, # mass of the lens in Msun
                     umin: float, # minimum impact parameter
                     t: float, # crossing time in hours
+                    ut: float, # threshold impact parameter
                     ) -> float: # radial velocity in km/s
     return 2*einstein_rad(d, mass) * (ut**2 - umin**2)**(1/2) / t * kpctokm
 
@@ -71,7 +79,7 @@ def get_primed_coords(d: float # distance from Sun
     """
     x = rEarth - d
     y = 0
-    return (x**2 + y**2)**0.5 * np.cos(alphabar*np.pi/180), (x**2 + y**2)**0.5 * np.sin(alphabar*np.pi/180)
+    return (x**2 + y**2)**0.5 * np.cos(alphabar*pi/180), (x**2 + y**2)**0.5 * np.sin(alphabar*pi/180)
 
 def scientific_format(x, pos):
     """
@@ -80,3 +88,84 @@ def scientific_format(x, pos):
     a, b = '{:.1e}'.format(x).split('e')
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
+
+# %% ../nbs/04_utils.ipynb 6
+# Add finite size calculation following https://arxiv.org/pdf/1905.06066.pdf
+
+# Compute 'w' parameter given the mass of the primordial black hole and the wavelength
+def w_func(m_pbh, lam):
+    return 5.98 * (m_pbh / 1e-10) * (lam / 6210)**(-1)
+
+# Compute 'rho' parameter given the mass of the primordial black hole and the lens distance
+def rho_func(m_pbh, dl, ds):
+    if dl >= ds:
+        raise ValueError("dl must be less than ds to prevent division by zero.")
+    x = dl / ds
+    return 5.9 * (m_pbh / 1e-10)**(-1/2) * (x / (1-x))**(1/2)
+
+# Compute magnification given the impact parameter 'u'
+def magnification(u):
+        if u == 0:
+            return np.inf
+        else:
+            return (u**2 + 2) / (u * (u**2 + 4)**0.5)
+
+# Compute magnification in the wave optics regime
+def magnification_wave(w, u):
+    # Note this is taking the maximum value of the wave optics magnification
+    # In reality, need to evaluate the hypergeometric function
+    return np.minimum(magnification(u), np.pi * w / (1 - np.exp(-np.pi * w)))
+
+# Compute displacement given 'x', 'y', and 'u'
+def displacement(x, y, u):
+    return ((x - u)**2 + y**2)**0.5
+
+# Compute integrand in polar coordinates
+def integrand_polar_wave(r, theta, w, u):
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    return magnification_wave(w, displacement(x, y, u)) * r
+
+def integrand_polar(r, theta, w, u):
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    return magnification(displacement(x, y, u)) * r
+
+# Compute finite magnification
+def magnification_finite_wave(m_pbh, lam, u, dl, ds):
+    w = w_func(m_pbh, lam)
+    rho = rho_func(m_pbh, dl, ds)
+    integrand = lambda r, theta: integrand_polar_wave(r, theta, w, u)
+    result, _ = nquad(integrand, [[0, rho], [0, 2 * pi]])
+    return result / (pi * rho**2)
+
+def magnification_finite(m_pbh, lam, u, dl, ds):
+    w = w_func(m_pbh, lam)
+    rho = rho_func(m_pbh, dl, ds)
+    integrand = lambda r, theta: integrand_polar(r, theta, w, u)
+    result, _ = nquad(integrand, [[0, rho], [0, 2 * pi]])
+    return result / (pi * rho**2)
+
+# Compute 'u' at threshold
+def u_t_finite(m_pbh, lam, dl, ds):
+    A_thresh = 1.34
+    func = lambda u: magnification_finite(m_pbh, lam, u, dl, ds) - A_thresh
+    u_min = 0
+    u_max = 10
+
+    try:
+        return brentq(func, u_min, u_max)
+    except ValueError:
+        return 0
+    
+def u_t_finite_wave(m_pbh, lam, dl, ds):
+    A_thresh = 1.34
+    func = lambda u: magnification_finite_wave(m_pbh, lam, u, dl, ds) - A_thresh
+    u_min = 0
+    u_max = 10
+
+    try:
+        return brentq(func, u_min, u_max)
+    except ValueError:
+        return 0
+

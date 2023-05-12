@@ -122,11 +122,12 @@ class Survey:
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,
+                                    finite: bool = False,
                                     ) -> np.ndarray:
         if self.pbh is None:
             raise ValueError("PBH population not defined")
         
-        return np.array([self.pbh.differential_rate(t) for t in t_es])
+        return self.pbh.compute_differential_rates(t_es, finite=finite)
     
     def get_crossing_time_rates(self,
                                 t_es: np.ndarray,

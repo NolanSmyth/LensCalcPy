@@ -9,7 +9,14 @@ from .utils import *
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import nquad
+from scipy.integrate import nquad, dblquad
+from scipy.interpolate import interp1d
+from tqdm import tqdm
+# from multiprocessing import Pool
+from pathos.multiprocessing import ProcessingPool as Pool
+import functools
+
+
 
 # %% ../nbs/00_pbh.ipynb 5
 class Pbh:
@@ -26,6 +33,7 @@ class Pbh:
         if f_dm < 0 or f_dm > 1:
             raise ValueError("f_dm must be between 0 and 1")
         self.f_dm = f_dm
+        self.ut_interp = None
     
     def __str__(self) -> str:
         return f"PBH population with m_pbh={self.m_pbh} and f_dm={self.f_dm}"
@@ -38,47 +46,79 @@ class Pbh:
     
     def differential_rate_integrand_mw(self, umin, d, t):
         r = dist_mw(d)
+        ut = self.ut_interp(d) if self.ut_interp else 1
+        if ut <= umin:
+            return 0
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                 density_mw(r) / (self.m_pbh * velocity_dispersion_mw(r)**2) *
-                velocity_radial(d, self.m_pbh, umin, t * htosec)**4 * (htosec / kpctokm)**2 *
-                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec)**2 / velocity_dispersion_mw(r)**2)))
+                velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**4 * (htosec / kpctokm)**2 *
+                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**2 / velocity_dispersion_mw(r)**2)))
     
     def differential_rate_integrand_m31(self, umin, d, t):
         r = dist_m31(d)
+        ut = self.ut_interp(d) if self.ut_interp else 1
+        if ut <= umin:
+            return 0
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                 density_m31(r) / (self.m_pbh * velocity_dispersion_m31(r)**2) *
-                velocity_radial(d, self.m_pbh, umin, t * htosec)**4 * (htosec / kpctokm)**2 *
-                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec)**2 / velocity_dispersion_m31(r)**2)))
+                velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**4 * (htosec / kpctokm)**2 *
+                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**2 / velocity_dispersion_m31(r)**2)))
     
     def differential_rate_integrand(self, umin, d, t):
+        ut = self.ut_interp(d) if self.ut_interp else 1
+        if ut <= umin:
+            return 0
         return self.differential_rate_integrand_mw(umin, d, t) + self.differential_rate_integrand_m31(umin, d, t)
     
     def differential_rate_mw(self, t):
-        umin_bounds = [0, ut*0.999]
-        d_bounds = [0, ds*0.999]
+        umin_bounds = [0, ut]
+        d_bounds = [0, ds]
 
         result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
 
         return result
     
     def differential_rate_m31(self, t):
-        umin_bounds = [0, ut*0.999]
-        d_bounds = [0, ds*0.999]
+        umin_bounds = [0, ut]
+        d_bounds = [0, ds]
 
         result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
 
         return result
     
-    def differential_rate(self, t):
+    def make_ut_interp(self):
+        d_arr = np.linspace(0, ds, 30)
+        ut_arr = np.array([u_t_finite(self.m_pbh, lam, d, ds) for d in d_arr])
+        self.ut_interp = interp1d(d_arr, ut_arr)
+    
+    def differential_rate(self, t, finite=False):
         #The integral is a bit sensitive to the bounds, so we have to be careful
         #For m31 there's a singularity at d=ds
-        # umin_bounds = [0, ut*0.999]
-        # d_bounds = [0, ds*0.999]
-        umin_bounds = [0, ut]
-        d_bounds = [0, ds]
 
-        result, error = nquad(self.differential_rate_integrand, [umin_bounds, d_bounds], args=[t])
+        if finite:
+            def umin_lower_bound(d):
+                return 0
+            
+            if self.ut_interp is None:
+                #? Maybe this should be an attribute of survey?
+                self.make_ut_interp()
 
-        return result
-    
-    
+            def umin_upper_bound(d):
+                #? Would interpolating this make the integration faster?
+                # return u_t_finite(self.m_pbh, lam, d, ds)
+                return self.ut_interp(d)
+            
+            result, error = dblquad(self.differential_rate_integrand, 0, ds, umin_lower_bound, umin_upper_bound, args=(t,))
+            return result    
+
+        else:
+            umin_bounds = [0, ut]
+            d_bounds = [0, ds]
+            result, error = nquad(self.differential_rate_integrand, [umin_bounds, d_bounds], args=[t])
+            return result
+            
+    def compute_differential_rates(self, ts, finite=False):
+        with Pool() as p:
+            f = functools.partial(self.differential_rate, finite=finite)
+            results = list(p.imap(f, ts))
+        return results

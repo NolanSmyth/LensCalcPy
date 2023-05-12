@@ -2,9 +2,9 @@
 
 # %% auto 0
 __all__ = ['rhoc', 'rs', 'G', 'rhocM31', 'rsM31', 'c', 'fpbh', 'ut', 'kpctokm', 'htosec', 'rEarth', 'r_max', 'l', 'b', 'ds',
-           'dsM31', 'obsTime', 'survey_area', 'n_sources', 'efficiency', 'zthinSol', 'zthickSol', 'zthin45', 'rsol',
-           'rdBreak', 'rthin', 'rthick', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp', 'cpar', 'rho0_B',
-           'Rc', 'alphabar']
+           'dsM31', 'obsTime', 'survey_area', 'n_sources', 'efficiency', 'lam', 'zthinSol', 'zthickSol', 'zthin45',
+           'rsol', 'rdBreak', 'rthin', 'rthick', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp', 'cpar',
+           'rho0_B', 'Rc', 'alphabar']
 
 # %% ../nbs/05_parameters.ipynb 3
 rhoc = 4.88e6 # MW nfw central density parameter in Msol kpc^-3
@@ -39,6 +39,7 @@ obsTime = 7
 survey_area = 0
 n_sources = 8.7e7
 efficiency = 0.6
+lam = 6000
 
 
 # %% ../nbs/05_parameters.ipynb 5
