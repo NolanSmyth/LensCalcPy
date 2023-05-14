@@ -100,6 +100,8 @@ def w_func(m_pbh, lam):
 def rho_func(m_pbh, dl, ds):
     if dl >= ds:
         raise ValueError("dl must be less than ds to prevent division by zero.")
+    if dl == 0:
+        return 1e-2
     x = dl / ds
     return 5.9 * (m_pbh / 1e-10)**(-1/2) * (x / (1-x))**(1/2)
 

@@ -15,7 +15,7 @@ from tqdm import tqdm
 # from multiprocessing import Pool
 from pathos.multiprocessing import ProcessingPool as Pool
 import functools
-
+from numba import njit
 
 
 # %% ../nbs/00_pbh.ipynb 5
@@ -44,47 +44,92 @@ class Pbh:
         rm31 = dist_m31(d)
         return self.f_dm *(density_mw(rmw) + density_m31(rm31))
     
-    def differential_rate_integrand_mw(self, umin, d, t):
+    def differential_rate_integrand_mw(self, umin, d, t, finite=False):
         r = dist_mw(d)
-        ut = self.ut_interp(d) if self.ut_interp else 1
+        ut = self.ut_interp(d) if (self.ut_interp and finite) else 1
         if ut <= umin:
             return 0
+        v_rad = velocity_radial(d, self.m_pbh, umin, t * htosec, ut)
+        v_disp = velocity_dispersion_mw(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
-                density_mw(r) / (self.m_pbh * velocity_dispersion_mw(r)**2) *
-                velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**4 * (htosec / kpctokm)**2 *
-                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**2 / velocity_dispersion_mw(r)**2)))
+                density_mw(r) / (self.m_pbh * v_disp**2) *
+                v_rad**4 * (htosec / kpctokm)**2 *
+                np.exp(-(v_rad**2 / v_disp**2)))
     
-    def differential_rate_integrand_m31(self, umin, d, t):
+    def differential_rate_integrand_m31(self, umin, d, t, finite=False):
         r = dist_m31(d)
-        ut = self.ut_interp(d) if self.ut_interp else 1
+        ut = self.ut_interp(d) if (self.ut_interp and finite) else 1
         if ut <= umin:
             return 0
+        v_rad = velocity_radial(d, self.m_pbh, umin, t * htosec, ut)
+        v_disp = velocity_dispersion_m31(r)
+        
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
-                density_m31(r) / (self.m_pbh * velocity_dispersion_m31(r)**2) *
-                velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**4 * (htosec / kpctokm)**2 *
-                np.exp(-(velocity_radial(d, self.m_pbh, umin, t * htosec, ut)**2 / velocity_dispersion_m31(r)**2)))
+                density_m31(r) / (self.m_pbh * v_disp**2) *
+                v_rad**4 * (htosec / kpctokm)**2 *
+                np.exp(-(v_rad**2 / v_disp**2)))
     
-    def differential_rate_integrand(self, umin, d, t):
+    def differential_rate_integrand(self, umin, d, t, finite=False):
         ut = self.ut_interp(d) if self.ut_interp else 1
         if ut <= umin:
             return 0
-        return self.differential_rate_integrand_mw(umin, d, t) + self.differential_rate_integrand_m31(umin, d, t)
+        return self.differential_rate_integrand_mw(umin, d, t, finite) + self.differential_rate_integrand_m31(umin, d, t, finite)
     
-    def differential_rate_mw(self, t):
-        umin_bounds = [0, ut]
-        d_bounds = [0, ds]
+    def differential_rate_mw(self, t, finite=False):
+        # umin_bounds = [0, ut]
+        # d_bounds = [0, ds]
 
-        result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
+        # result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
 
-        return result
+        # return result
     
-    def differential_rate_m31(self, t):
-        umin_bounds = [0, ut]
-        d_bounds = [0, ds]
+        if finite:
+                def umin_lower_bound(d):
+                    return 0
+                
+                if self.ut_interp is None:
+                    #? Maybe this should be an attribute of survey?
+                    self.make_ut_interp()
 
-        result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
+                def umin_upper_bound(d):
+                    return self.ut_interp(d)
+                
+                result, error = dblquad(self.differential_rate_integrand_mw, 0, ds, umin_lower_bound, umin_upper_bound, args=(t,))
+                return result    
 
-        return result
+        else:
+            umin_bounds = [0, ut]
+            d_bounds = [0, ds]
+            result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
+            return result
+    
+    def differential_rate_m31(self, t, finite=False):
+        # umin_bounds = [0, ut]
+        # d_bounds = [0, ds]
+
+        # result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
+
+        # return result
+
+        if finite:
+                def umin_lower_bound(d):
+                    return 0
+                
+                if self.ut_interp is None:
+                    #? Maybe this should be an attribute of survey?
+                    self.make_ut_interp()
+
+                def umin_upper_bound(d):
+                    return self.ut_interp(d)
+                
+                result, error = dblquad(self.differential_rate_integrand_m31, 0, ds, umin_lower_bound, umin_upper_bound, args=(t,))
+                return result    
+
+        else:
+            umin_bounds = [0, ut]
+            d_bounds = [0, ds]
+            result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
+            return result
     
     def make_ut_interp(self):
         d_arr = np.linspace(0, ds, 30)
@@ -104,8 +149,6 @@ class Pbh:
                 self.make_ut_interp()
 
             def umin_upper_bound(d):
-                #? Would interpolating this make the integration faster?
-                # return u_t_finite(self.m_pbh, lam, d, ds)
                 return self.ut_interp(d)
             
             result, error = dblquad(self.differential_rate_integrand, 0, ds, umin_lower_bound, umin_upper_bound, args=(t,))
@@ -118,7 +161,8 @@ class Pbh:
             return result
             
     def compute_differential_rates(self, ts, finite=False):
-        with Pool() as p:
-            f = functools.partial(self.differential_rate, finite=finite)
-            results = list(p.imap(f, ts))
-        return results
+        # with Pool() as p:
+        #     f = functools.partial(self.differential_rate, finite=finite)
+        #     results = list(p.imap(f, ts))
+        # return results
+        return [self.differential_rate(t, finite=finite) for t in ts]
