@@ -62,11 +62,13 @@ def rho_bulge(d):
 
 # Total FFP Density
 def rho_FFPs(d: float, # distance from Sun in kpc
+             n_ffp: float = 1, # number of FFPs per star
+             m_ffp: float = 1e-6 # mass of FFP in Msun
              ) -> float: # FFP density in Msun/kpc^3
     # TODO Need to weight this by number of FFPs per star and mass of FFPs
     r = dist_mw(d)
     z = 0
-    return rho_thin(r, z) + rho_thick(r, z) + rho_bulge(d)
+    return (rho_thin(r, z) + rho_thick(r, z) + rho_bulge(d)) * n_ffp * m_ffp
 
 
 
