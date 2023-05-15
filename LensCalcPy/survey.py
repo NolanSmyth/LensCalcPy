@@ -127,7 +127,7 @@ class Survey:
         if self.pbh is None:
             raise ValueError("PBH population not defined")
         
-        return self.pbh.compute_differential_rates(t_es, finite=finite)
+        return self.pbh.compute_differential_rate(t_es, finite=finite)
     
     def get_crossing_times_rates_ffp(self,
                                     t_es: np.ndarray,
@@ -136,7 +136,7 @@ class Survey:
         if self.ffp is None:
             raise ValueError("FFP population not defined")
         
-        return self.ffp.compute_differential_rates(t_es, finite=finite)
+        return self.ffp.compute_differential_rate(t_es, finite=finite)
     
     def get_crossing_time_rates(self,
                                 t_es: np.ndarray,

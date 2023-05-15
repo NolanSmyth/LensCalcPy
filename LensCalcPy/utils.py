@@ -178,14 +178,8 @@ m_low_interp = 1e-15
 m_high_interp = 1e0
 
 def make_ut_interp(n_points=40, ds = 770):
-    # Define d_arr outside of the loop over m_pbh_arr
-    # d_arr = np.logspace(-1, np.log10(ds), n_points-1)
-    # d_arr = np.insert(d_arr, 0, 0)
     d_arr = np.linspace(0, ds, n_points)
     m_arr = np.logspace(np.log10(m_low_interp), np.log10(m_high_interp), n_points) #solar masses
-
-    # Create a list to store all u_t_finite values
-    ut_values = []
 
     def calc_ut_arr(m):
     # Calculate ut_arr for the current m

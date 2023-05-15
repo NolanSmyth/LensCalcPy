@@ -6,6 +6,7 @@ __all__ = ['Pbh']
 # %% ../nbs/00_pbh.ipynb 3
 from .parameters import *
 from .utils import *
+from .lens import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,119 +18,52 @@ from pathos.multiprocessing import ProcessingPool as Pool
 import functools
 from numba import njit
 import pickle
+from abc import ABC, abstractmethod
 
 # %% ../nbs/00_pbh.ipynb 5
 with open('../interpolations/ut_interp_m31.pkl', 'rb') as f:
     ut_interp = pickle.load(f)
 
 # %% ../nbs/00_pbh.ipynb 6
-class Pbh:
+class Pbh(Lens):
     """A class to represent a PBH population"""
 
     def __init__(self,
-                m_pbh: float, # PBH mass in solar masses
+                mass: float, # PBH mass in solar masses
                 f_dm: float # PBH fraction of the DM density
                 ):
         """
         Initialize the PBH population
         """
-        if m_pbh < m_low_interp or m_pbh > m_high_interp:
-            raise ValueError("m_pbh must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
-        self.m_pbh = m_pbh
+        if mass < m_low_interp or mass > m_high_interp:
+            raise ValueError("PBH mass must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
+        self.mass = mass
         if f_dm < 0 or f_dm > 1:
             raise ValueError("f_dm must be between 0 and 1")
         self.f_dm = f_dm
         self.ut_interp = ut_interp
     
     def __str__(self) -> str:
-        return f"PBH population with m_pbh={self.m_pbh} and f_dm={self.f_dm}"
+        return f"PBH population with mass={self.mass} and f_dm={self.f_dm}"
     __repr__ = __str__
 
-    def density(self, d: float) -> float:
-        rmw = dist_mw(d)
-        rm31 = dist_m31(d)
-        return self.f_dm *(density_mw(rmw) + density_m31(rm31))
-    
     def differential_rate_integrand_mw(self, umin, d, t, finite=False):
-        r = dist_mw(d)
-        ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else 1
-        if ut <= umin:
-            return 0
-        v_rad = velocity_radial(d, self.m_pbh, umin, t * htosec, ut)
-        v_disp = velocity_dispersion_mw(r)
-        return 2 * (1 / (ut**2 - umin**2)**0.5 *
-                density_mw(r) / (self.m_pbh * v_disp**2) *
-                v_rad**4 * (htosec / kpctokm)**2 *
-                np.exp(-(v_rad**2 / v_disp**2)))
+        return self.differential_rate_integrand(umin, d, t, dist_mw, density_mw, velocity_dispersion_mw, finite=finite)
     
     def differential_rate_integrand_m31(self, umin, d, t, finite=False):
-        r = dist_m31(d)
-        ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else 1
-        if ut <= umin:
-            return 0
-        v_rad = velocity_radial(d, self.m_pbh, umin, t * htosec, ut)
-        v_disp = velocity_dispersion_m31(r)
-        
-        return 2 * (1 / (ut**2 - umin**2)**0.5 *
-                density_m31(r) / (self.m_pbh * v_disp**2) *
-                v_rad**4 * (htosec / kpctokm)**2 *
-                np.exp(-(v_rad**2 / v_disp**2)))
-    
-    def differential_rate_integrand(self, umin, d, t, finite=False):
-        ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else 1
-        if ut <= umin:
-            return 0
-        return self.differential_rate_integrand_mw(umin, d, t, finite) + self.differential_rate_integrand_m31(umin, d, t, finite)
-    
+        return self.differential_rate_integrand(umin, d, t, dist_m31, density_m31, velocity_dispersion_m31, finite=finite)
+
     def differential_rate_mw(self, t, finite=False):
+        return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
 
-        if finite:
-            result, error = dblquad(self.differential_rate_integrand_mw, 0, ds, self.umin_lower_bound, self.umin_upper_bound, args=(t,))
-            return result    
-
-        else:
-            umin_bounds = [0, ut]
-            d_bounds = [0, ds]
-            result, error = nquad(self.differential_rate_integrand_mw, [umin_bounds, d_bounds], args=[t])
-            return result
-    
     def differential_rate_m31(self, t, finite=False):
-        if finite:
-            result, error = dblquad(self.differential_rate_integrand_m31, 0, ds, self.umin_lower_bound, self.umin_upper_bound, args=(t,))
-            return result    
+        return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
 
-        else:
-            umin_bounds = [0, ut]
-            d_bounds = [0, ds]
-            result, error = nquad(self.differential_rate_integrand_m31, [umin_bounds, d_bounds], args=[t])
-            return result
-
-    def umin_lower_bound(self, d):
-        return 0
-    
     def umin_upper_bound(self, d):
-        if self.ut_interp is None:
-            self.make_ut_interp()
-        return self.ut_interp(d, self.m_pbh)[0]
+        return self.ut_interp(d, self.mass)[0]
     
-    def differential_rate(self, t, finite=False):
-        #The integral is a bit sensitive to the bounds, so we have to be careful
-        #For m31 there's a singularity at d=ds
-
-        if finite:
-   
-            result, error = dblquad(self.differential_rate_integrand, 0, ds, self.umin_lower_bound, self.umin_upper_bound, args=(t,))
-            return result    
-
-        else:
-            umin_bounds = [0, ut]
-            d_bounds = [0, ds]
-            result, error = nquad(self.differential_rate_integrand, [umin_bounds, d_bounds], args=[t])
-            return result
-            
-    def compute_differential_rates(self, ts, finite=False):
-        # with Pool() as p:
-        #     f = functools.partial(self.differential_rate, finite=finite)
-        #     results = list(p.imap(f, ts))
-        # return results
-        return [self.differential_rate(t, finite=finite) for t in ts]
+    def differential_rate_total(self, t, finite=False):
+        return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)
+ 
+    def compute_differential_rate(self, ts, finite=False):
+        return [self.differential_rate_total(t, finite=finite) for t in ts]
