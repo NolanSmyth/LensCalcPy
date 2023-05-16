@@ -21,10 +21,6 @@ import pickle
 from abc import ABC, abstractmethod
 
 # %% ../nbs/00_pbh.ipynb 5
-with open('../interpolations/ut_interp_m31.pkl', 'rb') as f:
-    ut_interp = pickle.load(f)
-
-# %% ../nbs/00_pbh.ipynb 6
 class Pbh(Lens):
     """A class to represent a PBH population"""
 

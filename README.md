@@ -21,21 +21,17 @@ population
 ``` python
 f_pbh = 1 # fraction of dark matter in PBHs
 
-ts = np.logspace(-2, 1, 100)
+ts = np.logspace(-2, 1, 30)
 pbhs = [Pbh(10**(i), f_pbh) for i in np.linspace(-9, -7, 3)]
 result = np.zeros((len(pbhs), len(ts)))
 for i, pbh in enumerate(pbhs):
-    for j, t in enumerate(ts):
-        result[i, j] = pbh.differential_rate(t)
+    result[i, :] = pbh.compute_differential_rate(ts)
 ```
-
-    /Users/nolansmyth/opt/anaconda3/lib/python3.9/site-packages/scipy/integrate/quadpack.py:879: IntegrationWarning: The integral is probably divergent, or slowly convergent.
-      quad_r = quad(f, low, high, args=args, full_output=self.full_output,
 
 ``` python
 for i, pbh in enumerate(pbhs):
     # plt.loglog(ts, result[i], label=r"$M_{\rm{PBH}} = " + str(pbh.m_pbh) + "M_{\odot}$")
-    plt.loglog(ts, result[i], label=r"$M_{\rm{PBH}} = $" + scientific_format(pbh.m_pbh,0) + "$M_{\odot}$")
+    plt.loglog(ts, result[i], label=r"$M_{\rm{PBH}} = $" + scientific_format(pbh.mass,0) + "$M_{\odot}$")
 
 
 plt.xlabel(r"$t$ [hr]")
@@ -53,20 +49,20 @@ Similarly, we can calculate the distribution of crossing times for an
 FFP population
 
 ``` python
-mFFP = 1e-3
-t = np.logspace(0, 4, num=100)
-ffp_diff_rates = [dGdt_FFP(i, mFFP) for i in t]
+mMin = 1e-7  # solar masses
+alpha = 2
+fp = FfpPopulation(mMin, alpha)
 ```
 
 ``` python
-plt.loglog(t, ffp_diff_rates, 
-           label="Event Rate", color="blue")
-plt.xlabel(r"$t$ [hr]")
-plt.ylabel(r"$d\Gamma/dt$ [events/star/hr/hr]")
-plt.xscale("log")
-plt.yscale("log")
-plt.xlim(1e0, 1e4)
-plt.ylim(1e-33, 1e-27)
+ts = np.logspace(-2, np.log10(1e3), num=100)
+diff_rates = fp.compute_differential_rate(ts, finite=False)
+
+plt.loglog(ts, diff_rates, color="blue")
+plt.xlabel(r"$t_E$ [h]", fontsize=16)
+plt.ylabel(r"$d\Gamma/dt$ [events/star/hr/hr]", fontsize=16)
+plt.xlim([0.009, 1e3])
+plt.ylim([1e-20, 1e-7])
 plt.show()
 ```
 
