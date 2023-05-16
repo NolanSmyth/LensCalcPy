@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['m_low_ffp_interp', 'm_high_interp', 'alpha_low_interp', 'alpha_high_interp', 'zthin', 'rho_thin', 'rho_thick', 'rsf',
-           'fE', 'cut', 'rho_bulge', 'rho_FFPs_mw', 'm_avg_ffp', 'make_m_avg_interp', 'FfpPopulation']
+           'fE', 'cut', 'rho_bulge', 'rho_FFPs_mw', 'm_avg_ffp', 'make_m_avg_interp', 'Ffp', 'FfpPopulation']
 
 # %% ../nbs/01_ffp.ipynb 3
 from .parameters import *
@@ -165,6 +165,42 @@ with open('../interpolations/ut_interp_m31.pkl', 'rb') as f:
 #             result, error = nquad(f, [umin_bounds, d_bounds], args=[t])
 #             return result
 
+
+# %% ../nbs/01_ffp.ipynb 9
+class Ffp(Lens):
+    """A class to represent a PBH population"""
+
+    def __init__(self,
+                mass: float, # FFP mass in solar masses
+                ):
+        """
+        Initialize the PBH population
+        """
+        if mass < m_low_interp or mass > m_high_interp:
+            raise ValueError("mass must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
+        self.mass = mass
+        self.ut_interp = ut_interp
+    
+    def __str__(self) -> str:
+        return f"FFP with m_ffp={self.mass}"
+    __repr__ = __str__
+
+    def differential_rate_integrand_mw(self, umin, d, t, finite=False):
+        return self.differential_rate_integrand(umin, d, t, dist_mw, rho_FFPs_mw, velocity_dispersion_mw, finite=finite, density_func_uses_d=True)
+
+    def differential_rate_mw(self, t, finite=False):
+        return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
+
+    def umin_upper_bound(self, d):
+        if self.ut_interp is None:
+            self.make_ut_interp()
+        return self.ut_interp(d, self.mass)[0]
+    
+    def differential_rate_total(self, t, finite=False):
+        return self.differential_rate_mw(t, finite=finite) 
+ 
+    def compute_differential_rate(self, ts, finite=False):
+        return [self.differential_rate_total(t, finite=finite) for t in ts]
 
 # %% ../nbs/01_ffp.ipynb 13
 class FfpPopulation():

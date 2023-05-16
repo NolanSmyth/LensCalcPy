@@ -37,7 +37,7 @@ class Survey:
         self.obs_time = obs_time 
         self.survey_area = survey_area
         self.pbh = None # PBH population
-        self.ffp = None # FFP population
+        self.ffp_pop = None # FFP population
         self.n_pbh = n_pbh # Number of PBHs detected
         self.n_ffp = n_ffp # Number of FFPs detected
         self.n_sources = n_sources # Number of sources observed in the Milky Way
@@ -60,7 +60,7 @@ class Survey:
                 alpha: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(mlow, alpha)
+        self.ffp_pop = FfpPopulation(mlow, alpha)
     
     def num_pbh(self) -> float:
 
@@ -115,10 +115,10 @@ class Survey:
         """returns an array of lens masses"""
         if self.pbh is None:
             raise ValueError("PBH population not defined")
-        if self.ffp is None:
+        if self.ffp_pop is None:
             raise ValueError("FFP population not defined")
-        print(len(self.ffp.sample_masses), self.n_pbh)
-        return np.concatenate((np.ones(self.n_pbh) * self.pbh.m_pbh, self.ffp.sample_masses))
+        print(len(self.ffp_pop.sample_masses), self.n_pbh)
+        return np.concatenate((np.ones(self.n_pbh) * self.pbh.mass, self.ffp_pop.sample_masses))
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,
@@ -133,22 +133,25 @@ class Survey:
                                     t_es: np.ndarray,
                                     finite: bool = False,
                                     ) -> np.ndarray:
-        if self.ffp is None:
+        if self.ffp_pop is None:
             raise ValueError("FFP population not defined")
         
-        return self.ffp.compute_differential_rate(t_es, finite=finite)
+        return self.ffp_pop.compute_differential_rate(t_es, finite=finite)
     
     def get_crossing_time_rates(self,
                                 t_es: np.ndarray,
+                                finite: bool = False,
                                 ) -> np.ndarray:
         """returns an array of crossing times"""
         if self.pbh is None:
             raise ValueError("PBH population not defined")
-        if self.ffp is None:
+        if self.ffp_pop is None:
             raise ValueError("FFP population not defined")
         
-        rates_pbh = np.array([self.pbh.differential_rate(t) for t in t_es])
-        rates_ffp = np.array([self.ffp.differential_rate(t) for t in t_es])
+        # rates_pbh = np.array([self.pbh.differential_rate(t) for t in t_es])
+        # rates_ffp = np.array([self.ffp_pop.differential_rate(t) for t in t_es])
+        rates_pbh = np.array(self.get_crossing_times_rates_pbh(t_es, finite=finite))
+        rates_ffp = np.array(self.get_crossing_times_rates_ffp(t_es, finite=finite))
     
         #return separately for testing
         return rates_pbh, rates_ffp
@@ -175,4 +178,6 @@ class Survey:
         num_pbh = t_es * num_pbh_obs
         num_ffp = t_es * num_ffp_obs
         
-        return np.around(num_pbh), np.around(num_ffp)
+        # return np.around(num_pbh), np.around(num_ffp)
+        return num_pbh, num_ffp
+
