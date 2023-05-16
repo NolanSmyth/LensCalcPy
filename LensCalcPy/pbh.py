@@ -16,7 +16,6 @@ from tqdm import tqdm
 # from multiprocessing import Pool
 from pathos.multiprocessing import ProcessingPool as Pool
 import functools
-from numba import njit
 import pickle
 from abc import ABC, abstractmethod
 
