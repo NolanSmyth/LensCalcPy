@@ -7,7 +7,6 @@ __all__ = ['Lens']
 from .parameters import *
 from .utils import *
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import nquad, dblquad
@@ -15,11 +14,6 @@ import pickle
 from abc import ABC, abstractmethod
 
 # %% ../nbs/07_lens.ipynb 5
-#todo move to utils
-with open('../interpolations/ut_interp_m31.pkl', 'rb') as f:
-    ut_interp = pickle.load(f)
-
-# %% ../nbs/07_lens.ipynb 6
 class Lens(ABC):
     """Abstract class for lens objects.
     """

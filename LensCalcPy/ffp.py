@@ -20,9 +20,6 @@ from pathos.multiprocessing import ProcessingPool as Pool
 
 
 # %% ../nbs/01_ffp.ipynb 5
-with open('../interpolations/m_avg_interp.pkl', 'rb') as f:
-    m_avg_interp = pickle.load(f)
-
 # Disk Density
 def zthin(r):
     if r > 4.5:
@@ -180,10 +177,6 @@ def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
     return (rho_bulge_m31(a, m_low, alpha) + rho_disk_m31(a, m_low, alpha) + rho_nucleus_m31(a, m_low, alpha)) * n_ffp
 
 # %% ../nbs/01_ffp.ipynb 10
-with open('../interpolations/ut_interp_m31.pkl', 'rb') as f:
-    ut_interp = pickle.load(f)
-
-# %% ../nbs/01_ffp.ipynb 11
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -225,7 +218,7 @@ class Ffp(Lens):
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
 
-# %% ../nbs/01_ffp.ipynb 15
+# %% ../nbs/01_ffp.ipynb 14
 class FfpPopulation():
     
     def __init__(self, 
