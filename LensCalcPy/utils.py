@@ -21,11 +21,11 @@ from .interpolations.interps import ut_interp, m_avg_interp
 import matplotlib.pyplot as plt
 
 # %% ../nbs/04_utils.ipynb 4
-# #Put 0 indent assignments so that variables will be in __all__
+#Put 0 indent assignments so that variables will be in __all__
 ut_interp = ut_interp
 m_avg_interp = m_avg_interp
 
-# %% ../nbs/04_utils.ipynb 6
+# %% ../nbs/04_utils.ipynb 5
 def dist_mw(d: float, # distance from the Sun in kpc
             ) -> float: #distance to the MW center in kpc
     return np.sqrt(d**2 + rEarth**2 - 2*d*rEarth*np.cos(np.radians(l))*np.cos(np.radians(b)))
@@ -98,7 +98,7 @@ def scientific_format(x, pos):
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
 
-# %% ../nbs/04_utils.ipynb 8
+# %% ../nbs/04_utils.ipynb 7
 # Add finite size calculation following https://arxiv.org/pdf/1905.06066.pdf
 
 # Compute 'w' parameter given the mass of the primordial black hole and the wavelength

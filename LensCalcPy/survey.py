@@ -33,7 +33,6 @@ class Survey:
         self.l = l 
         self.b = b 
         self.source_dist = source_dist 
-        self.earth_dist = 8.5 
         self.obs_time = obs_time 
         self.survey_area = survey_area
         self.pbh = None # PBH population
@@ -61,55 +60,6 @@ class Survey:
                 ):
         """adds a FFP population to the survey"""
         self.ffp_pop = FfpPopulation(mlow, alpha)
-    
-    def num_pbh(self) -> float:
-
-        """returns the number of PBHs in the line of sight"""
-
-        if self.pbh is None:
-            raise ValueError("PBH population not defined")
-        
-         # Obtain survey area, center latitude, and center longitude
-        b_radian = b * np.pi / 180  # rad
-        l_radian = l * np.pi / 180  # rad
-
-        # Calculate the field of view for the current field
-        field_of_view_radius = (self.survey_area / np.pi) ** (1 / 2)
-
-        # Generate an array of heliocentric radii
-        # (Just used to numerically integrate the line-of-sight density)
-        n_lin = 100000
-        r_h_linspace = np.linspace(0, r_max, num=n_lin)
-
-        # Represent the line-of-sight line as galactic coordinates
-        galactic_lin = coord.Galactic(
-            l=l_radian * units.rad,
-            b=b_radian * units.rad,
-            distance=r_h_linspace * units.kpc,
-        )
-
-        # Transform the line-of-sight into to galactocentric coordinates
-        # (Outputs l, b, and distance [units: deg, deg, kpc])
-        galacto_lin = galactic_lin.transform_to(
-            coord.Galactocentric(representation_type="spherical")
-        )
-
-        # Determine dark matter density at all galactocentric radii along the line-of-sight
-        rho_lin = density_mw(galacto_lin.spherical.distance.value)
-
-        # Estimate the total mass within the line-of-sight cylinder [units: M_sun kpc**-2]
-        # Total mass = projected line-of-sight density x projected line-of-sight area
-        rho_marg_r = np.trapz(rho_lin, dx=(r_max) / n_lin) 
-        
-        # Determine line-of-sight cylinder radius, assuming small angle approximation [units: kpc]
-        r_proj_los_cyl = field_of_view_radius * np.pi / 180 * (r_max)
-        # Get projected area of the LOS cylinder [units: kpc**2]
-        area_proj_los_cyl = np.pi * r_proj_los_cyl**2
-        # Get the total mass within the line-of-sight cylinder
-        mass_los_cyl = rho_marg_r * area_proj_los_cyl
-        # Get the total number of black holes to randomly draw
-        n_pbh = int(np.round(self.pbh.f_dm * mass_los_cyl / self.pbh.m_pbh))
-        return n_pbh
 
     def get_lens_masses(self) -> np.ndarray:
         """returns an array of lens masses"""
@@ -143,19 +93,12 @@ class Survey:
                                 finite: bool = False,
                                 ) -> np.ndarray:
         """returns an array of crossing times"""
-        if self.pbh is None:
-            raise ValueError("PBH population not defined")
-        if self.ffp_pop is None:
-            raise ValueError("FFP population not defined")
         
-        # rates_pbh = np.array([self.pbh.differential_rate(t) for t in t_es])
-        # rates_ffp = np.array([self.ffp_pop.differential_rate(t) for t in t_es])
         rates_pbh = np.array(self.get_crossing_times_rates_pbh(t_es, finite=finite))
         rates_ffp = np.array(self.get_crossing_times_rates_ffp(t_es, finite=finite))
     
         #return separately for testing
         return rates_pbh, rates_ffp
-    
     
     def get_events_observed(self,
                             t_es: np.ndarray,
