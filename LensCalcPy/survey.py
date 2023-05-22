@@ -36,7 +36,7 @@ class Survey:
         self.obs_time = obs_time 
         self.survey_area = survey_area
         self.pbh = None # PBH population
-        self.ffp_pop = None # FFP population
+        self.ffp = None # FFP population
         self.n_pbh = n_pbh # Number of PBHs detected
         self.n_ffp = n_ffp # Number of FFPs detected
         self.n_sources = n_sources # Number of sources observed in the Milky Way
@@ -55,20 +55,19 @@ class Survey:
         return
     
     def add_ffp(self,
-                mlow: float, # lower mass bound of FFPs in solar masses
-                alpha: float, # power law index of FFP mass function
+                p: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp_pop = FfpPopulation(mlow, alpha)
+        self.ffp = Ffp(p)
 
-    def get_lens_masses(self) -> np.ndarray:
-        """returns an array of lens masses"""
-        if self.pbh is None:
-            raise ValueError("PBH population not defined")
-        if self.ffp_pop is None:
-            raise ValueError("FFP population not defined")
-        print(len(self.ffp_pop.sample_masses), self.n_pbh)
-        return np.concatenate((np.ones(self.n_pbh) * self.pbh.mass, self.ffp_pop.sample_masses))
+    # def get_lens_masses(self) -> np.ndarray:
+    #     """returns an array of lens masses"""
+    #     if self.pbh is None:
+    #         raise ValueError("PBH population not defined")
+    #     if self.ffp is None:
+    #         raise ValueError("FFP population not defined")
+    #     print(len(self.ffp_pop.sample_masses), self.n_pbh)
+    #     return np.concatenate((np.ones(self.n_pbh) * self.pbh.mass, self.ffp_pop.sample_masses))
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,
@@ -83,10 +82,10 @@ class Survey:
                                     t_es: np.ndarray,
                                     finite: bool = False,
                                     ) -> np.ndarray:
-        if self.ffp_pop is None:
+        if self.ffp is None:
             raise ValueError("FFP population not defined")
         
-        return self.ffp_pop.compute_differential_rate(t_es, finite=finite)
+        return self.ffp.compute_differential_rate(t_es, finite=finite)
     
     def get_crossing_time_rates(self,
                                 t_es: np.ndarray,
@@ -107,20 +106,9 @@ class Survey:
         
         rates_pbh, rates_ffp = self.get_crossing_time_rates(t_es)
         
-        num_pbh_obs = rates_pbh * self.n_sources * self.obs_time 
-        num_ffp_obs = rates_ffp * self.n_sources * self.obs_time
+        num_pbh_obs = rates_pbh * self.n_sources * self.obs_time * t_es
+        num_ffp_obs = rates_ffp * self.n_sources * self.obs_time * t_es
         
         return num_pbh_obs, num_ffp_obs
     
-    def get_num_events(self,
-                       t_es: np.ndarray,
-                       ) -> np.ndarray:
-       
-        num_pbh_obs, num_ffp_obs = self.get_events_observed(t_es)
-        
-        num_pbh = t_es * num_pbh_obs
-        num_ffp = t_es * num_ffp_obs
-        
-        # return np.around(num_pbh), np.around(num_ffp)
-        return num_pbh, num_ffp
 

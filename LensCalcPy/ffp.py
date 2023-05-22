@@ -12,7 +12,7 @@ from .lens import *
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import nquad, dblquad
+from scipy.integrate import quad, nquad, dblquad, tplquad
 from scipy.interpolate import interp1d, interp2d
 import pickle
 import functools
@@ -29,12 +29,8 @@ def zthin(r):
 
 def rho_thin_mw(r, 
              z,
-            n_ffp: float = 1, # number of FFPs per star
-            m_low: float = 1e-6, # mass of FFP in Msun
-            alpha: float = 2, # power law index of FFP mass function):
             ) -> float: # FFP density in Msun/kpc^3
-    #? Is averaging over mass correct here?
-    mass_avg = m_avg_interp(m_low, alpha)
+
 
     if r > rdBreak:
         result = rho_thin_Sol * zthinSol / zthin(r) * \
@@ -43,16 +39,11 @@ def rho_thin_mw(r,
         result = rho_thin_Sol * zthinSol / zthin(r) * \
             np.exp(-((rdBreak - rsol) / rthin)) * (1 / np.cos(np.abs(z) / zthin(r)))**2
     
-    return result * n_ffp * mass_avg
+    return result 
 
 def rho_thick_mw(r, 
               z, 
-            n_ffp: float = 1, # number of FFPs per star
-            m_low: float = 1e-6, # mass of FFP in Msun
-            alpha: float = 2, # power law index of FFP mass function):
             ) -> float: # FFP density in Msun/kpc^3
-    #? Is averaging over mass correct here?
-    mass_avg = m_avg_interp(m_low, alpha)
     
     if r > rdBreak:
         result = rho_thick_Sol * np.exp(-((r - rsol) / rthick)) * \
@@ -61,7 +52,7 @@ def rho_thick_mw(r,
         result = rho_thick_Sol * np.exp(-((rdBreak - rsol) / rthick)) * \
             np.exp(-(np.abs(z) / zthickSol))
 
-    return result * n_ffp * mass_avg
+    return result 
 
 # Bulge Density
 def rsf(xp, yp, zp):
@@ -78,27 +69,19 @@ def cut(x):
         return 1
 
 def rho_bulge_mw(d: float,
-            n_ffp: float = 1, # number of FFPs per star
-            m_low: float = 1e-6, # mass of FFP in Msun
-            alpha: float = 2, # power law index of FFP mass function):
             ) -> float: # FFP density in Msun/kpc^3
-    #? Is averaging over mass correct here?
-    mass_avg = m_avg_interp(m_low, alpha)
     xp, yp = get_primed_coords(d)
     #todo need to generalize this to arbitrary z
     zp = 0
     R = (xp**2 + yp**2 + zp**2)**0.5
-    return rho0_B * fE(xp, yp, zp) * cut((R - Rc) / 0.5) * n_ffp * mass_avg
+    return rho0_B * fE(xp, yp, zp) * cut((R - Rc) / 0.5)
 
 # Total FFP Density
 def rho_FFPs_mw(d: float, # distance from Sun in kpc
-             n_ffp: float = 1, # number of FFPs per star
-             m_low: float = 1e-6, # lowest mass of FFP in Msun
-             alpha: float = 2, # power law index of FFP mass function
              ) -> float: # FFP density in Msun/kpc^3
     r = dist_mw(d)
     z = 0
-    return (rho_thin_mw(r, z, n_ffp, m_low, alpha) + rho_thick_mw(r, z, n_ffp, m_low, alpha ) + rho_bulge_mw(d, n_ffp, m_low, alpha)) 
+    return (rho_thin_mw(r, z) + rho_thick_mw(r, z) + rho_bulge_mw(d)) 
 
 def m_avg_ffp(m_low, alpha):
     masses = m_low * (1 - np.random.rand(int(1e4)))**(-1 / (alpha - 1))
@@ -135,82 +118,154 @@ def einasto(a, rhoc, dn, ac, n):
     return rhoc * np.exp(-dn *((a/ac)**(1/n) - 1))
 
 def rho_bulge_m31(a, 
-                m_low: float = 1e-6, # mass of FFP in Msun
-                alpha: float = 2, # power law index of FFP mass function):
                 ) -> float: # FFP density in Msun/kpc^3
-    mass_avg = m_avg_interp(m_low, alpha)
-
     rhoc = 9.201e-1 * (1e3)**3 #Msun/kpc^3
     dn = 7.769
     ac = 1.155 #kpc
     n = 2.7
-    return einasto(a, rhoc, n, ac, dn) * mass_avg
+    return einasto(a, rhoc, n, ac, dn) 
 
 def rho_disk_m31(a,
-                 m_low: float = 1e-6, # mass of FFP in Msun
-                 alpha: float = 2, # power law index of FFP mass function
                     ) -> float: # FFP density in Msun/kpc^3
-    mass_avg = m_avg_interp(m_low, alpha)
     rhoc = 1.307e-2 * (1e3)**3 #Msun/kpc^3
     dn = 3.273
     ac = 10.67 #kpc
     n = 1.2
-    return einasto(a, rhoc, n, ac, dn) * mass_avg
+    return einasto(a, rhoc, n, ac, dn) 
 
 def rho_nucleus_m31(a,
-                    m_low: float = 1e-6, # mass of FFP in Msun
-                    alpha: float = 2, # power law index of FFP mass function
                     ) -> float: # FFP density in Msun/kpc^3
-    mass_avg = m_avg_interp(m_low, alpha)
     rhoc = 1.713 * (1e3)**3 #Msun/kpc^3
     dn = 11.668
     ac = 0.0234 #kpc
     n = 4.0
-    return einasto(a, rhoc, n, ac, dn) * mass_avg
+    return einasto(a, rhoc, n, ac, dn) 
 
 
 def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
-             n_ffp: float = 1, # number of FFPs per star
-             m_low: float = 1e-6, # lowest mass of FFP in Msun
-             alpha: float = 2, # power law index of FFP mass function
              ) -> float: # FFP density in Msun/kpc^3
-    return (rho_bulge_m31(a, m_low, alpha) + rho_disk_m31(a, m_low, alpha) + rho_nucleus_m31(a, m_low, alpha)) * n_ffp
+    return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
 # %% ../nbs/01_ffp.ipynb 10
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
     def __init__(self,
-                mass: float, # FFP mass in solar masses
+                p: float = 2, # Mass function power law index
                 ):
         """
         Initialize the PBH population
         """
-        if mass < m_low_interp or mass > m_high_interp:
-            raise ValueError("mass must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
-        self.mass = mass
+        
         self.ut_interp = ut_interp
+        self.p = p
+        #Define range of power law we want to consider
+        self.m_min = 1e-15
+        self.m_max = 1e-5
+        self.Z = self.pl_norm(self.p)
+
     
     def __str__(self) -> str:
-        return f"FFP with m_ffp={self.mass}"
+        return f"FFP with power law ~ m^-{self.p}"
     __repr__ = __str__
 
-    def differential_rate_integrand_mw(self, umin, d, t, finite=False):
-        return self.differential_rate_integrand(umin, d, t, dist_mw, rho_FFPs_mw, velocity_dispersion_mw, finite=finite, density_func_uses_d=True)
+    def mass_func(self, m):
+        #M_norm = 1 solar mass for now
+        return (m / 1) ** -self.p
+    
+    def pl_norm(self, p):
+        N_ffp = 1 # Number of FFPs per star
+        return N_ffp/abs(nquad(self.mass_func,[[self.m_min, self.m_max]], opts={'points': [self.m_min, self.m_min*1e3]})[0])
+
+    def differential_rate_integrand(self, umin, d, mf, t, dist_func, density_func, v_disp_func, finite=False, density_func_uses_d=False):
+        r = dist_func(d)
+        ut = self.umin_upper_bound(d, mf) if (self.ut_interp and finite) else 1
+        if ut <= umin:
+            return 0
+        v_rad = velocity_radial(d, mf, umin, t * htosec, ut)  
+        v_disp = v_disp_func(r)
+        density_input = d if density_func_uses_d else r
+        return 2 * (1 / (ut**2 - umin**2)**0.5 *
+                        #For FFP number density, use stellar density for 1 solar mass stars
+                density_func(density_input) / (1 * v_disp**2) *  
+                v_rad**4 * (htosec / kpctokm)**2 *
+                np.exp(-(v_rad**2 / v_disp**2)) *
+                # (mf) ** -self.p)  # mass function
+                1)
+
+    # def differential_rate(self, t, integrand_func, finite=False):
+    #     if finite:
+    #         result, error = tplquad(integrand_func, self.m_min, self.m_max, 
+    #                     lambda mf: 0, 
+    #                     lambda mf: ds, 
+    #                     lambda mf, d: 0, 
+    #                     lambda mf, d: self.umin_upper_bound(d, mf), 
+    #                     args=(t,))
+
+    #         return result * self.Z    
+        
+    #     else:
+    #         umin_bounds = [0, ut]
+    #         d_bounds = [0, ds]
+    #         mf_bounds = [self.m_min, self.m_max]
+    #         result, error = nquad(integrand_func, [umin_bounds, d_bounds, mf_bounds], args=(t,))
+    #         # result, error = tplquad(integrand_func, 
+    #         #             self.m_min, self.m_max, 
+    #         #             lambda mf: 0, 
+    #         #             lambda mf: ds, 
+    #         #             lambda mf, d: 0, 
+    #         #             lambda mf, d: ut, 
+    #         #             args=(t,),)
+    #         print(error/result)
+    #         return result * self.Z
+
+    def differential_rate(self, t, integrand_func, finite=False):
+        num = 20  # number of discretization points
+        mf_values = np.logspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
+        result = 0
+        for i in range(num):
+            mf = mf_values[i]
+            if i == 0:  # for the first point
+                dm = mf_values[i+1] - mf_values[i]
+            elif i < num - 1:  # for middle points
+                dm = ((mf_values[i+1] - mf_values[i]) + (mf_values[i] - mf_values[i-1])) / 2
+            else:  # for the last point
+                dm = mf_values[i] - mf_values[i-1]
+            #TODO These errors are too big currently. Think about splitting up integral
+            if finite:
+                single_result, error = dblquad(integrand_func, 
+                                            0, ds, 
+                                            lambda d: 0, 
+                                            lambda d: self.umin_upper_bound(d, mf),
+                                            args=(mf, t))
+            else:
+                single_result, error = dblquad(integrand_func,
+                                            0, ds,
+                                            lambda d: 0, 
+                                            lambda d: ut,
+                                            args=(mf, t))
+            result += single_result * (mf ** -self.p) * dm  # multiply by mass function and by dm
+            # print(error/single_result)
+        result *= self.Z  # normalization
+        return result
+        
+
+    def differential_rate_integrand_mw(self, umin, d, mf, t, finite=False):
+        return self.differential_rate_integrand(umin, d, mf, t, dist_mw, rho_FFPs_mw, velocity_dispersion_mw, finite=finite, density_func_uses_d=True)
 
     def differential_rate_mw(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
-    
-    def differential_rate_integrand_m31(self, umin, d, t, finite=False):
-        return self.differential_rate_integrand(umin, d, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
-    
+
+    def differential_rate_integrand_m31(self, umin, d, mf, t, finite=False):
+        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
+
     def differential_rate_m31(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
 
-    def umin_upper_bound(self, d):
+    def umin_upper_bound(self, d, m):
         if self.ut_interp is None:
             self.make_ut_interp()
-        return self.ut_interp(d, self.mass)[0]
+        return self.ut_interp(d, m)[0]
     
     def differential_rate_total(self, t, finite=False):
         return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)
@@ -218,7 +273,7 @@ class Ffp(Lens):
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
 
-# %% ../nbs/01_ffp.ipynb 14
+# %% ../nbs/01_ffp.ipynb 19
 class FfpPopulation():
     
     def __init__(self, 
@@ -247,7 +302,8 @@ class FfpPopulation():
     __repr__ = __str__
 
     def generate_ffps(self):
-        bins = np.logspace(np.log10(self.mlow), np.log10(np.max(self.sample_masses) * 1.01), num=self.n_bins)
+        # bins = np.logspace(np.log10(self.mlow), np.log10(np.max(self.sample_masses) * 1.01), num=self.n_bins)
+        bins = np.logspace(np.log10(self.mlow), np.log10(self.mlow*1e7) * 1.01, num=self.n_bins)
         counts, hist_bins, = np.histogram(self.sample_masses, bins=bins, density=True)
         bin_centers = (hist_bins[1:] + hist_bins[:-1]) / 2
         weights = counts/np.sum(counts)
