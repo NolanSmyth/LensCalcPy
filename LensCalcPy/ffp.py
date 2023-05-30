@@ -19,7 +19,7 @@ import functools
 from pathos.multiprocessing import ProcessingPool as Pool
 
 
-# %% ../nbs/01_ffp.ipynb 5
+# %% ../nbs/01_ffp.ipynb 9
 # Disk Density
 def zthin(r):
     if r > 4.5:
@@ -111,7 +111,7 @@ def make_m_avg_interp(n_points=40):
     m_avg_interp = interp2d(m_arr, alpha_arr, m_avg_values)
     return m_avg_interp
 
-# %% ../nbs/01_ffp.ipynb 6
+# %% ../nbs/01_ffp.ipynb 10
 # Add stellar distribution of M31 following: https://www.aanda.org/articles/aa/pdf/2012/10/aa20065-12.pdf
 
 def einasto(a, rhoc, dn, ac, n):
@@ -146,7 +146,7 @@ def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
              ) -> float: # FFP density in Msun/kpc^3
     return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
-# %% ../nbs/01_ffp.ipynb 10
+# %% ../nbs/01_ffp.ipynb 14
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -273,7 +273,7 @@ class Ffp(Lens):
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
 
-# %% ../nbs/01_ffp.ipynb 19
+# %% ../nbs/01_ffp.ipynb 24
 class FfpPopulation():
     
     def __init__(self, 
