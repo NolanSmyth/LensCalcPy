@@ -82,13 +82,26 @@ def velocity_radial(d: float, # distance from the Sun in kpc
 # assuming z ~= 0 and we are looking at line of sight to galactic center from Sun
 # galactocentric coordniates x', y' as function of d, distance from Sun
 
-def get_primed_coords(d: float # distance from Sun
+def get_primed_coords(d: float # distance from Sun in km
                       )-> tuple:
-    """Get galactocentric coordinates x', y' as function of d, distance from Sun
+    """Get galactocentric coordinates x', y' given galactic latitude and longitude l, b, and distance d
     """
-    x = rEarth - d
-    y = 0
-    return (x**2 + y**2)**0.5 * np.cos(alphabar*pi/180), (x**2 + y**2)**0.5 * np.sin(alphabar*pi/180)
+    # convert angles from degrees to radians
+    l_rad = np.deg2rad(l)
+    b_rad = np.deg2rad(b)
+    alpha_rad = np.deg2rad(alphabar)
+
+    # calculate unrotated Cartesian coordinates
+    x_unrot = rEarth - d * np.cos(b_rad) * np.cos(l_rad)
+    y_unrot = d * np.cos(b_rad) * np.sin(l_rad)
+
+    # rotate the coordinates
+    x_prime = x_unrot * np.cos(alpha_rad) - y_unrot * np.sin(alpha_rad)
+    y_prime = x_unrot * np.sin(alpha_rad) + y_unrot * np.cos(alpha_rad)
+
+    z_prime = d * np.sin(b_rad)
+
+    return x_prime, y_prime, z_prime
 
 def scientific_format(x, pos):
     """
@@ -98,7 +111,7 @@ def scientific_format(x, pos):
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
 
-# %% ../nbs/04_utils.ipynb 8
+# %% ../nbs/04_utils.ipynb 9
 # Add finite size calculation following https://arxiv.org/pdf/1905.06066.pdf
 
 # Compute 'w' parameter given the mass of the primordial black hole and the wavelength
