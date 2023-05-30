@@ -31,8 +31,10 @@ r_max = 2*rEarth # maximum distance to find PBH from Earth in kpc
 
 # l = 1.0 #degrees
 # b = -1.03 #degrees
-l = 121.2
-b = -21.6
+l = 121.2 #degrees
+b = -21.6 #degrees
+
+
 ds = 770 #distance to source in kpc
 dsM31 = 770 # kpc
 obsTime = 7 # observation time in hours
