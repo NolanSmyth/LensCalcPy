@@ -31,13 +31,14 @@ def rho_thin_mw(r,
              z,
             ) -> float: # FFP density in Msun/kpc^3
 
-
     if r > rdBreak:
         result = rho_thin_Sol * zthinSol / zthin(r) * \
-            np.exp(-((r - rsol) / rthin)) * (1 / np.cos(np.abs(z) / zthin(r)))**2
+            np.exp(-((r - rsol) / rthin)) * \
+            (1 / np.cosh(-np.abs(z) / zthin(r)))**2
     else:
         result = rho_thin_Sol * zthinSol / zthin(r) * \
-            np.exp(-((rdBreak - rsol) / rthin)) * (1 / np.cos(np.abs(z) / zthin(r)))**2
+            np.exp(-((rdBreak - rsol) / rthin)) * \
+            (1 / np.cosh(-np.abs(z) / zthin(r)))**2
     
     return result 
 
@@ -56,8 +57,8 @@ def rho_thick_mw(r,
 
 # Bulge Density
 def rsf(xp, yp, zp):
-    R = (xp**cperp / x0**cperp + yp**cperp / y0**cperp)**(cpar/cperp) + (zp / z0)**cpar
-    return R**(1/cpar)
+    rs = (((xp/x0)**cperp + (yp/y0)**cperp)**(cpar/cperp) + (zp/z0)**cpar)**(1/cpar)
+    return rs
 
 def fE(xp, yp, zp):
     return np.exp(-rsf(xp, yp, zp))
@@ -70,17 +71,16 @@ def cut(x):
 
 def rho_bulge_mw(d: float,
             ) -> float: # FFP density in Msun/kpc^3
-    xp, yp = get_primed_coords(d)
-    #todo need to generalize this to arbitrary z
-    zp = 0
-    R = (xp**2 + yp**2 + zp**2)**0.5
-    return rho0_B * fE(xp, yp, zp) * cut((R - Rc) / 0.5)
+    xp, yp, zp = get_primed_coords(d)
+    xp, yp, zp = abs(xp), abs(yp), abs(zp)
+    r = (xp**2 + yp**2 + zp**2)**0.5
+    return rho0_B * fE(xp, yp, zp) * cut((r - Rc) / 0.5)
 
 # Total FFP Density
 def rho_FFPs_mw(d: float, # distance from Sun in kpc
              ) -> float: # FFP density in Msun/kpc^3
     r = dist_mw(d)
-    z = 0
+    _, _, z = get_primed_coords(d)
     return (rho_thin_mw(r, z) + rho_thick_mw(r, z) + rho_bulge_mw(d)) 
 
 def m_avg_ffp(m_low, alpha):
@@ -111,7 +111,7 @@ def make_m_avg_interp(n_points=40):
     m_avg_interp = interp2d(m_arr, alpha_arr, m_avg_values)
     return m_avg_interp
 
-# %% ../nbs/01_ffp.ipynb 10
+# %% ../nbs/01_ffp.ipynb 11
 # Add stellar distribution of M31 following: https://www.aanda.org/articles/aa/pdf/2012/10/aa20065-12.pdf
 
 def einasto(a, rhoc, dn, ac, n):
