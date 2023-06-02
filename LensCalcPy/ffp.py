@@ -2,8 +2,8 @@
 
 # %% auto 0
 __all__ = ['m_low_ffp_interp', 'm_high_interp', 'alpha_low_interp', 'alpha_high_interp', 'zthin', 'rho_thin_mw', 'rho_thick_mw',
-           'rsf', 'fE', 'cut', 'rho_bulge_mw', 'rho_FFPs_mw', 'm_avg_ffp', 'make_m_avg_interp', 'einasto',
-           'rho_bulge_m31', 'rho_disk_m31', 'rho_nucleus_m31', 'rho_FFPs_m31', 'Ffp']
+           'rsf', 'fE', 'cut', 'rho_bulge_mw', 'rho_FFPs_mw', 'einasto', 'rho_bulge_m31', 'rho_disk_m31',
+           'rho_nucleus_m31', 'rho_FFPs_m31', 'Ffp']
 
 # %% ../nbs/01_ffp.ipynb 3
 from .parameters import *
@@ -83,33 +83,11 @@ def rho_FFPs_mw(d: float, # distance from Sun in kpc
     _, _, z = get_primed_coords(d)
     return (rho_thin_mw(r, z) + rho_thick_mw(r, z) + rho_bulge_mw(d)) 
 
-def m_avg_ffp(m_low, alpha):
-    masses = m_low * (1 - np.random.rand(int(1e4)))**(-1 / (alpha - 1))
-    masses[masses > m_high_interp] = m_high_interp
-    return np.mean(masses)
-
 m_low_ffp_interp = 1e-15
 m_high_interp = 1e0
 alpha_low_interp = 1
 alpha_high_interp = 3
 
-def make_m_avg_interp(n_points=40):
-    alpha_arr = np.linspace(alpha_low_interp, alpha_high_interp, n_points)
-    m_arr = np.logspace(np.log10(m_low_interp), np.log10(m_high_interp), n_points) #solar masses
-
-    def calc_m_avg_arr(m):
-    # Calculate ut_arr for the current m
-        return np.array([m_avg_ffp(m, alpha) for alpha in alpha_arr])
-    
-    with Pool() as p:
-        m_avg_values = list(p.map(calc_m_avg_arr, m_arr))
-
-    # Convert ut_values to a 2D array
-    m_avg_values = np.array(m_avg_values)
-    
-    # Create the 2D interpolation table
-    m_avg_interp = interp2d(m_arr, alpha_arr, m_avg_values)
-    return m_avg_interp
 
 # %% ../nbs/01_ffp.ipynb 7
 # Add stellar distribution of M31 following: https://www.aanda.org/articles/aa/pdf/2012/10/aa20065-12.pdf
@@ -145,7 +123,7 @@ def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
              ) -> float: # FFP density in Msun/kpc^3
     return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
-# %% ../nbs/01_ffp.ipynb 11
+# %% ../nbs/01_ffp.ipynb 10
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -163,7 +141,7 @@ class Ffp(Lens):
         self.m_max = 1e-5
         self.Z = self.pl_norm(self.p)
 
-    
+
     def __str__(self) -> str:
         return f"FFP with power law ~ m^-{self.p}"
     __repr__ = __str__
@@ -218,7 +196,6 @@ class Ffp(Lens):
                                             lambda d: ut,
                                             args=(mf, t))
             result += single_result * (mf ** -self.p) * dm  # multiply by mass function and by dm
-            # print(error/single_result)
         result *= self.Z  # normalization
         return result
         

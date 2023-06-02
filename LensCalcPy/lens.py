@@ -58,6 +58,5 @@ class Lens(ABC):
 
     @abstractmethod
     def compute_differential_rate(self, t, finite=False):
-        # return self.differential_rate(t, finite)
         pass
 

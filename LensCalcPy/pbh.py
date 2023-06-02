@@ -19,6 +19,8 @@ import functools
 import pickle
 from abc import ABC, abstractmethod
 
+from fastcore.test import *
+
 # %% ../nbs/00_pbh.ipynb 5
 class Pbh(Lens):
     """A class to represent a PBH population"""
