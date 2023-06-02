@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['m_low_ffp_interp', 'm_high_interp', 'alpha_low_interp', 'alpha_high_interp', 'zthin', 'rho_thin_mw', 'rho_thick_mw',
            'rsf', 'fE', 'cut', 'rho_bulge_mw', 'rho_FFPs_mw', 'm_avg_ffp', 'make_m_avg_interp', 'einasto',
-           'rho_bulge_m31', 'rho_disk_m31', 'rho_nucleus_m31', 'rho_FFPs_m31', 'Ffp', 'FfpPopulation']
+           'rho_bulge_m31', 'rho_disk_m31', 'rho_nucleus_m31', 'rho_FFPs_m31', 'Ffp']
 
 # %% ../nbs/01_ffp.ipynb 3
 from .parameters import *
@@ -19,7 +19,7 @@ import functools
 from pathos.multiprocessing import ProcessingPool as Pool
 
 
-# %% ../nbs/01_ffp.ipynb 9
+# %% ../nbs/01_ffp.ipynb 5
 # Disk Density
 def zthin(r):
     if r > 4.5:
@@ -111,7 +111,7 @@ def make_m_avg_interp(n_points=40):
     m_avg_interp = interp2d(m_arr, alpha_arr, m_avg_values)
     return m_avg_interp
 
-# %% ../nbs/01_ffp.ipynb 11
+# %% ../nbs/01_ffp.ipynb 7
 # Add stellar distribution of M31 following: https://www.aanda.org/articles/aa/pdf/2012/10/aa20065-12.pdf
 
 def einasto(a, rhoc, dn, ac, n):
@@ -123,7 +123,7 @@ def rho_bulge_m31(a,
     dn = 7.769
     ac = 1.155 #kpc
     n = 2.7
-    return einasto(a, rhoc, n, ac, dn) 
+    return einasto(a, rhoc, dn, ac, n) 
 
 def rho_disk_m31(a,
                     ) -> float: # FFP density in Msun/kpc^3
@@ -131,7 +131,7 @@ def rho_disk_m31(a,
     dn = 3.273
     ac = 10.67 #kpc
     n = 1.2
-    return einasto(a, rhoc, n, ac, dn) 
+    return einasto(a, rhoc, dn, ac, n) 
 
 def rho_nucleus_m31(a,
                     ) -> float: # FFP density in Msun/kpc^3
@@ -139,14 +139,13 @@ def rho_nucleus_m31(a,
     dn = 11.668
     ac = 0.0234 #kpc
     n = 4.0
-    return einasto(a, rhoc, n, ac, dn) 
-
+    return einasto(a, rhoc, dn, ac, n) 
 
 def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
              ) -> float: # FFP density in Msun/kpc^3
     return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
-# %% ../nbs/01_ffp.ipynb 14
+# %% ../nbs/01_ffp.ipynb 11
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -190,34 +189,8 @@ class Ffp(Lens):
                 density_func(density_input) / (1 * v_disp**2) *  
                 v_rad**4 * (htosec / kpctokm)**2 *
                 np.exp(-(v_rad**2 / v_disp**2)) *
-                # (mf) ** -self.p)  # mass function
                 1)
 
-    # def differential_rate(self, t, integrand_func, finite=False):
-    #     if finite:
-    #         result, error = tplquad(integrand_func, self.m_min, self.m_max, 
-    #                     lambda mf: 0, 
-    #                     lambda mf: ds, 
-    #                     lambda mf, d: 0, 
-    #                     lambda mf, d: self.umin_upper_bound(d, mf), 
-    #                     args=(t,))
-
-    #         return result * self.Z    
-        
-    #     else:
-    #         umin_bounds = [0, ut]
-    #         d_bounds = [0, ds]
-    #         mf_bounds = [self.m_min, self.m_max]
-    #         result, error = nquad(integrand_func, [umin_bounds, d_bounds, mf_bounds], args=(t,))
-    #         # result, error = tplquad(integrand_func, 
-    #         #             self.m_min, self.m_max, 
-    #         #             lambda mf: 0, 
-    #         #             lambda mf: ds, 
-    #         #             lambda mf, d: 0, 
-    #         #             lambda mf, d: ut, 
-    #         #             args=(t,),)
-    #         print(error/result)
-    #         return result * self.Z
 
     def differential_rate(self, t, integrand_func, finite=False):
         num = 20  # number of discretization points
@@ -270,95 +243,5 @@ class Ffp(Lens):
     def differential_rate_total(self, t, finite=False):
         return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)
  
-    def compute_differential_rate(self, ts, finite=False):
-        return [self.differential_rate_total(t, finite=finite) for t in ts]
-
-# %% ../nbs/01_ffp.ipynb 24
-class FfpPopulation():
-    
-    def __init__(self, 
-                 mlow: float, # lower mass limit in solar masses
-                 alpha: float, # power law slope of distribution
-                 n_bins: int = 10, # number of bins to use for the mass distribution
-                 ): 
-        if alpha < alpha_low_interp or alpha > alpha_high_interp:
-            raise ValueError(f"alpha must be between {alpha_low_interp} and {alpha_high_interp}")
-        if mlow < m_low_ffp_interp or mlow > m_high_interp:
-            raise ValueError(f"mlow must be between {m_low_ffp_interp} and {m_high_interp}")
-        self.mlow = mlow
-        self.alpha = alpha
-        self.sample_masses = self.generate_sample(int(1e4))
-        self.tE_interp = None
-        self.tE_finite_interp = None
-        self.ut_interp = ut_interp
-        self.n_bins = n_bins
-        self.ffps = []
-        self.ffp_weights = [] #relative contribution of each FFP mass bin
-
-        self.generate_ffps()
-    
-    def __str__(self):
-        return f"FFP: mlow={self.mlow}, alpha={self.alpha}, n_bins={self.n_bins}"
-    __repr__ = __str__
-
-    def generate_ffps(self):
-        # bins = np.logspace(np.log10(self.mlow), np.log10(np.max(self.sample_masses) * 1.01), num=self.n_bins)
-        bins = np.logspace(np.log10(self.mlow), np.log10(self.mlow*1e7) * 1.01, num=self.n_bins)
-        counts, hist_bins, = np.histogram(self.sample_masses, bins=bins, density=True)
-        bin_centers = (hist_bins[1:] + hist_bins[:-1]) / 2
-        weights = counts/np.sum(counts)
-        masses = bin_centers
-        for mass in masses:
-            self.ffps.append(Ffp(mass))
-        for weight in weights:
-            self.ffp_weights.append(weight)
-
-    def get_weighted_te(self,
-                        finite=False,
-                        ):
-        tMin = 1e-2  # hours
-        tMax = 1e3
-        n_t_bins = 10
-        tBins = np.logspace(np.log10(tMin), np.log10(tMax), num=n_t_bins)
-
-        tETable = np.zeros((len(self.ffps)-1, len(tBins)))
-        for i in range(len(self.ffps)-1):
-            for j in range(len(tBins)):
-                tETable[i,j] = self.ffp_weights[i] * self.ffps[i].differential_rate_total(tBins[j], finite=finite)
-
-        tEWeighted = np.sum(tETable, axis=0)
-        return tBins, tEWeighted
-
-    def generate_sample(self, 
-                        n: int = int(1e4) # number of samples
-                        ):
-        masses = self.mlow * (1 - np.random.rand(int(n)))**(-1 / (self.alpha - 1))
-        masses[masses > m_high_interp] = m_high_interp
-        return masses
-
-    def make_te_interp(self,
-                       finite = False,
-                       ):
-        tBins, tEWeighted = self.get_weighted_te(finite=finite)
-        # Handle zero values in tEWeighted
-        eps = 1e-50
-        tEWeighted_nonzero = np.where(tEWeighted == 0, eps, tEWeighted)
-        tEInterp = interp1d(np.log10(tBins), np.log10(tEWeighted_nonzero), kind="cubic")
-
-        if finite:
-            self.tE_finite_interp = tEInterp
-        else:
-            self.tE_interp = tEInterp
-
-    def differential_rate_total(self, t, finite=False):
-        if finite:
-            if self.tE_finite_interp is None:
-                self.make_te_interp(finite=finite)
-            return 10**self.tE_finite_interp(np.log10(t))
-    
-        if self.tE_interp is None:
-            self.make_te_interp(finite=finite)
-        return 10**self.tE_interp(np.log10(t))
-
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
