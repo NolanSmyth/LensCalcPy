@@ -13,8 +13,6 @@ pip install LensCalcPy
 
 ## How to use
 
-### Note that all functionality is currently for a survey of the MW bulge. Will be able to customize to other surveys soon.
-
 We can calculate the distribution of crossing times for a given PBH
 population
 
@@ -28,14 +26,15 @@ for i, pbh in enumerate(pbhs):
     result[i, :] = pbh.compute_differential_rate(ts)
 ```
 
+    /Users/nolansmyth/opt/anaconda3/lib/python3.9/site-packages/scipy/integrate/quadpack.py:879: IntegrationWarning: The integral is probably divergent, or slowly convergent.
+      quad_r = quad(f, low, high, args=args, full_output=self.full_output,
+
 ``` python
 for i, pbh in enumerate(pbhs):
-    # plt.loglog(ts, result[i], label=r"$M_{\rm{PBH}} = " + str(pbh.m_pbh) + "M_{\odot}$")
     plt.loglog(ts, result[i], label=r"$M_{\rm{PBH}} = $" + scientific_format(pbh.mass,0) + "$M_{\odot}$")
 
-
-plt.xlabel(r"$t$ [hr]")
-plt.ylabel(r"$d\Gamma/dt$ [events/star/hr/hr]")
+plt.xlabel(r"$t_E$ [h]", fontsize=16)
+plt.ylabel(r"$d\Gamma/dt$ [events/star/hr/hr]", fontsize=16)
 plt.xlim(1e-2, 1e1)
 plt.ylim(1e-10, 1e-4)
 
@@ -49,24 +48,26 @@ Similarly, we can calculate the distribution of crossing times for an
 FFP population
 
 ``` python
-mMin = 1e-7  # solar masses
 alpha = 2
-fp = FfpPopulation(mMin, alpha)
+fp = Ffp(alpha)
 ```
 
 ``` python
-ts = np.logspace(-2, np.log10(1e3), num=100)
+ts = np.logspace(-2, np.log10(1e3), num=30)
 diff_rates = fp.compute_differential_rate(ts, finite=False)
+```
 
+``` python
+#Note: event rate normalized to 1 FFP/ISO per host star
 plt.loglog(ts, diff_rates, color="blue")
 plt.xlabel(r"$t_E$ [h]", fontsize=16)
 plt.ylabel(r"$d\Gamma/dt$ [events/star/hr/hr]", fontsize=16)
 plt.xlim([0.009, 1e3])
-plt.ylim([1e-20, 1e-7])
+plt.ylim([1e-32, 1e-13])
 plt.show()
 ```
 
-![](index_files/figure-commonmark/cell-5-output-1.png)
+![](index_files/figure-commonmark/cell-6-output-1.png)
 
 ## Statistics
 
@@ -120,7 +121,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![](index_files/figure-commonmark/cell-7-output-1.png)
+![](index_files/figure-commonmark/cell-8-output-1.png)
 
 ``` python
 # Calculate the likelihood ratio test statistic

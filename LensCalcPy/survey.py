@@ -59,15 +59,6 @@ class Survey:
                 ):
         """adds a FFP population to the survey"""
         self.ffp = Ffp(p)
-
-    # def get_lens_masses(self) -> np.ndarray:
-    #     """returns an array of lens masses"""
-    #     if self.pbh is None:
-    #         raise ValueError("PBH population not defined")
-    #     if self.ffp is None:
-    #         raise ValueError("FFP population not defined")
-    #     print(len(self.ffp_pop.sample_masses), self.n_pbh)
-    #     return np.concatenate((np.ones(self.n_pbh) * self.pbh.mass, self.ffp_pop.sample_masses))
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,
