@@ -89,7 +89,17 @@ class Survey:
     
         #return separately for testing
         return rates_pbh, rates_ffp
-    
+
+    def get_events_observed_pbh(self,
+                                t_es: np.ndarray,
+                                finite: bool = False,
+                                ) -> np.ndarray:
+        
+        rates_pbh = np.array(self.get_crossing_times_rates_pbh(t_es, finite=finite))
+        num_pbh_obs = rates_pbh * self.n_sources * self.obs_time * t_es
+
+        return num_pbh_obs
+
     def get_events_observed(self,
                             t_es: np.ndarray,
                             ) -> np.ndarray:
