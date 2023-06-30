@@ -63,14 +63,18 @@ def velocity_dispersion_m31(r: float, # distance from the M31 center in kpc
         return 0
     return np.sqrt(G * mass_enclosed_m31(r) / r)
 
-def dist(d: float # distance from the Sun in kpc
+def dist(d: float, # distance from the Sun in kpc
+         ds: float = ds, # distance to the source in kpc
          ) -> float: #weighted lensing distance in kpc
+    if d > ds:
+         raise ValueError("Distance of lens must be less than source distance but d = " + str(d) + " and ds = " + str(ds))
     return d * (1 - d/ds)
 
 def einstein_rad(d: float, # distance from the Sun in kpc
                  mass: float, # mass of the lens in Msun
-                 ) -> float:
-    return (4 * G * mass * dist(d)/c**2)**(1/2)
+                 ds: float = ds, # distance to the source in kpc
+                 ) -> float: # Einstein radius in kpc
+    return (4 * G * mass * dist(d, ds)/c**2)**(1/2)
 
 def velocity_radial(d: float, # distance from the Sun in kpc
                     mass: float, # mass of the lens in Msun
@@ -155,7 +159,7 @@ def integrand_polar_wave(r, theta, w, u):
     y = r * np.sin(theta)
     return magnification_wave(w, displacement(x, y, u)) * r
 
-def integrand_polar(r, theta, w, u):
+def integrand_polar(r, theta, u):
     x = r * np.cos(theta)
     y = r * np.sin(theta)
     return magnification(displacement(x, y, u)) * r
@@ -168,17 +172,16 @@ def magnification_finite_wave(m_pbh, lam, u, dl, ds):
     result, _ = nquad(integrand, [[0, rho], [0, 2 * pi]])
     return result / (pi * rho**2)
 
-def magnification_finite(m_pbh, lam, u, dl, ds):
-    w = w_func(m_pbh, lam)
+def magnification_finite(m_pbh, u, dl, ds):
     rho = rho_func(m_pbh, dl, ds)
-    integrand = lambda r, theta: integrand_polar(r, theta, w, u)
+    integrand = lambda r, theta: integrand_polar(r, theta, u)
     result, _ = nquad(integrand, [[0, rho], [0, 2 * pi]])
     return result / (pi * rho**2)
 
 # Compute 'u' at threshold
-def u_t_finite(m_pbh, lam, dl, ds):
+def u_t_finite(m_pbh, dl, ds):
     A_thresh = 1.34
-    func = lambda u: magnification_finite(m_pbh, lam, u, dl, ds) - A_thresh
+    func = lambda u: magnification_finite(m_pbh, u, dl, ds) - A_thresh
     u_min = 0
     u_max = 10
 
