@@ -90,7 +90,8 @@ def rho_FFPs_mw(d: float, # distance from Sun in kpc
     return (rho_thin_mw(r, z) + rho_thick_mw(r, z) + rho_bulge_mw(d)) 
 
 def velocity_dispersion_stars_mw(r,
-                                 v_c: float = 25 # km/s
+                                 v_c: float = 30 # km/s
+                                #  v_c: float = 10 # km/s
                                 ):
     return v_c
 
@@ -126,16 +127,22 @@ def rho_nucleus_m31(a,
 
 def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
              ) -> float: # FFP density in Msun/kpc^3
-    return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
+    # return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
-# %% ../nbs/01_ffp.ipynb 11
+    #The bulge/nucleus is excluded from the m31 survey
+    return rho_disk_m31(a)
+
+
+# %% ../nbs/01_ffp.ipynb 17
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
     def __init__(self,
                 p: float = 2, # Mass function power law index
                 m_min: float = 1e-15, # Minimum mass in Msun
-                m_max: float = 1e-5, # Maximum mass in Msun
+                # m_max: float = 1e-5, # Maximum mass in Msun
+                m_max: float = 1e-3, # Maximum mass in Msun
+
                 ):
         """
         Initialize the PBH population
@@ -146,15 +153,45 @@ class Ffp(Lens):
         #Define range of power law we want to consider
         self.m_min = m_min
         self.m_max = m_max
-        self.Z = self.pl_norm(self.p)
+        self.M_norm = 1
+        # self.Z = self.pl_norm(self.p)
+        self.Z = self.pl_norm_new()
 
     def __str__(self) -> str:
-        return f"FFP with power law ~ m^-{self.p}"
+        return f"FFP with power law dN / dlogM ~ m^-{self.p}"
     __repr__ = __str__
 
-    def mass_func(self, m):
-        #M_norm = 1 solar mass for now
-        return (m / 1) ** -self.p
+    # def mass_func(self, m):
+    #     #M_norm = 1 solar mass for now
+    #     return (m / 1) ** -self.p
+
+    def dN_dM(self, A, M, M_norm, p):
+        return A * (M/M_norm)**-p / M
+    
+    def dN_dM_wrapper(self, M):
+        return self.dN_dM(1, M, self.M_norm, self.p)
+    
+    def dN_dlogM(self, A, log10M, M_norm, p):
+        M = 10**log10M
+        return A * (M/self.M_norm)**-p
+    
+    def dN_dlogM_wrapper(self, M):
+        return self.dN_dlogM(1, M, self.M_norm, self.p)
+    
+    # def pl_norm_new(self, p):
+    #     return 1/abs(nquad(self.dN_dM_wrapper,[[self.m_min, self.m_max]], opts={'points': [self.m_min, self.m_min*1e3]})[0])
+
+    def pl_norm_new(self):
+        return 1/abs(nquad(self.dN_dlogM_wrapper,[[np.log10(self.m_min), np.log10(self.m_max)]], opts={'points': [np.log10(self.m_min), np.log10(self.m_min*1e3)]})[0])
+    
+    # def mass_func(self, m):
+    #     #M_norm = 1 solar mass for now
+    #     return self.Z * (m/1)**-self.p / m
+
+    def mass_func(self, log10m):
+        #M_norm = 1 solar mass for now. This is dN/dlogM
+        m = 10**log10m
+        return self.Z * (m/1)**-self.p
     
     def pl_norm(self, p):
         N_ffp = 1 # Number of FFPs per star
@@ -177,7 +214,9 @@ class Ffp(Lens):
 
     def differential_rate(self, t, integrand_func, finite=False):
         num = 40  # number of discretization points, empirically, result levels off for >~ 40
-        mf_values = np.logspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
+        # mf_values = np.logspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
+        mf_values = np.linspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
+
         result = 0
         for i in range(num):
             mf = mf_values[i]
@@ -191,8 +230,10 @@ class Ffp(Lens):
                 single_result, error = dblquad(integrand_func, 
                                             0, ds, 
                                             lambda d: 0, 
-                                            lambda d: self.umin_upper_bound(d, mf),
-                                            args=(mf, t),
+                                            lambda d: self.umin_upper_bound(d, 10**mf),
+                                            # args=(mf, t),
+                                            args=(10**mf, t),
+
                                             # epsabs=0,
                                             # epsrel=1e-2,
                                             )
@@ -202,15 +243,38 @@ class Ffp(Lens):
                                             0, ds*0.99,
                                             lambda d: 0, 
                                             lambda d: ut,
-                                            args=(mf, t),
+                                            args=(10**mf, t),
                                             # epsabs=0,
                                             # epsrel=1e-2,
                                             )
             # if single_result != 0 and error/abs(single_result) >=1:
                 # print("Warning: error in differential rate integration is large: {}".format(error/abs(single_result)))
 
-            result += single_result * (mf ** -self.p) * dm  # multiply by mass function and by dm
+            # result += single_result * (mf ** -self.p) * dm  # multiply by mass function and by dm
+            # result += single_result * (mf ** -self.p) / mf * dm  # multiply by mass function and by dm
+            
+            result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dm this is for dN/dlogM
+
         result *= self.Z  # normalization
+        return result
+    
+    def differential_rate_monochromatic(self, t, integrand_func, finite=False, m=1e-10):
+    
+        if finite:
+            result, error = dblquad(integrand_func, 
+                                        0, ds, 
+                                        lambda d: 0, 
+                                        lambda d: self.umin_upper_bound(d, m),
+                                        args=(m, t),
+                                        )
+        else:
+            result, error = dblquad(integrand_func,
+                                            #Without finite size effects, integral blows up at M31 center
+                                        0, ds*0.99,
+                                        lambda d: 0, 
+                                        lambda d: ut,
+                                        args=(m, t),
+                                        )
         return result
         
     def differential_rate_integrand_mw(self, umin, d, mf, t, finite=False):
@@ -219,12 +283,19 @@ class Ffp(Lens):
         
     def differential_rate_mw(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
+    
+    def differential_rate_mw_monochromatic(self, t, finite=False, m=1e-10):
+        return self.differential_rate_monochromatic(t, self.differential_rate_integrand_mw, finite=finite, m=m)
 
     def differential_rate_integrand_m31(self, umin, d, mf, t, finite=False):
-        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
+        # return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
+        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_stars_mw, finite=finite, density_func_uses_d=False)
 
     def differential_rate_m31(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
+    
+    def differential_rate_m31_monochromatic(self, t, finite=False, m=1e-10):
+        return self.differential_rate_monochromatic(t, self.differential_rate_integrand_m31, finite=finite, m=m)
 
     def umin_upper_bound(self, d, m):
         if self.ut_interp is None:

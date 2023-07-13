@@ -120,7 +120,7 @@ def scientific_format(x, pos):
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
 
-# %% ../nbs/04_utils.ipynb 8
+# %% ../nbs/04_utils.ipynb 9
 # Add finite size calculation following https://arxiv.org/pdf/1905.06066.pdf
 
 # Compute 'w' parameter given the mass of the primordial black hole and the wavelength
