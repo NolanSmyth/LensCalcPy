@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="A module to model and calculate the properties of Free Floating Planets (FFPs), such as density, mass, distance, and velocity distribution.">
+
+<title>LensCalcPy - ffp</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="LensCalcPy - ffp">
+<meta property="og:description" content="A module to model and calculate the properties of Free Floating Planets (FFPs), such as density, mass, distance, and velocity distribution.">
+<meta property="og:image" content="https://NolanSmyth.github.io/LensCalcPy/01_ffp_files/figure-html/cell-13-output-1.png">
+<meta property="og:site-name" content="LensCalcPy">
+<meta property="og:image:height" content="476">
+<meta property="og:image:width" content="592">
+<meta name="twitter:title" content="LensCalcPy - ffp">
+<meta name="twitter:description" content="A module to model and calculate the properties of Free Floating Planets (FFPs), such as density, mass, distance, and velocity distribution.">
+<meta name="twitter:image" content="https://NolanSmyth.github.io/LensCalcPy/01_ffp_files/figure-html/cell-13-output-1.png">
+<meta name="twitter:image-height" content="476">
+<meta name="twitter:image-width" content="592">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">LensCalcPy</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools ms-auto">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ffp.html">ffp</a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LensCalcPy</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pbh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">pbh</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ffp.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">ffp</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mw.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">core</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./survey.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">survey</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">utils</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./parameters.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parameters</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stats.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stats</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./lens.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">lens</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#velocity_dispersion_stars_mw" id="toc-velocity_dispersion_stars_mw" class="nav-link active" data-scroll-target="#velocity_dispersion_stars_mw">velocity_dispersion_stars_mw</a></li>
+  <li><a href="#rho_ffps_mw" id="toc-rho_ffps_mw" class="nav-link" data-scroll-target="#rho_ffps_mw">rho_FFPs_mw</a></li>
+  <li><a href="#rho_bulge_mw" id="toc-rho_bulge_mw" class="nav-link" data-scroll-target="#rho_bulge_mw">rho_bulge_mw</a></li>
+  <li><a href="#cut" id="toc-cut" class="nav-link" data-scroll-target="#cut">cut</a></li>
+  <li><a href="#fe" id="toc-fe" class="nav-link" data-scroll-target="#fe">fE</a></li>
+  <li><a href="#rsf" id="toc-rsf" class="nav-link" data-scroll-target="#rsf">rsf</a></li>
+  <li><a href="#rho_thick_mw" id="toc-rho_thick_mw" class="nav-link" data-scroll-target="#rho_thick_mw">rho_thick_mw</a></li>
+  <li><a href="#rho_thin_mw" id="toc-rho_thin_mw" class="nav-link" data-scroll-target="#rho_thin_mw">rho_thin_mw</a></li>
+  <li><a href="#zthin" id="toc-zthin" class="nav-link" data-scroll-target="#zthin">zthin</a></li>
+  <li><a href="#rho_ffps_m31" id="toc-rho_ffps_m31" class="nav-link" data-scroll-target="#rho_ffps_m31">rho_FFPs_m31</a></li>
+  <li><a href="#rho_nucleus_m31" id="toc-rho_nucleus_m31" class="nav-link" data-scroll-target="#rho_nucleus_m31">rho_nucleus_m31</a></li>
+  <li><a href="#rho_disk_m31" id="toc-rho_disk_m31" class="nav-link" data-scroll-target="#rho_disk_m31">rho_disk_m31</a></li>
+  <li><a href="#rho_bulge_m31" id="toc-rho_bulge_m31" class="nav-link" data-scroll-target="#rho_bulge_m31">rho_bulge_m31</a></li>
+  <li><a href="#einasto" id="toc-einasto" class="nav-link" data-scroll-target="#einasto">einasto</a></li>
+  <li><a href="#power-law-mass-function" id="toc-power-law-mass-function" class="nav-link" data-scroll-target="#power-law-mass-function">Power law Mass function</a></li>
+  <li><a href="#ffp" id="toc-ffp" class="nav-link" data-scroll-target="#ffp">Ffp</a></li>
+  <li><a href="#ensure-limits-are-independent-of-mass-function-startend" id="toc-ensure-limits-are-independent-of-mass-function-startend" class="nav-link" data-scroll-target="#ensure-limits-are-independent-of-mass-function-startend">Ensure limits are independent of mass function start/end</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/NolanSmyth/LensCalcPy/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">ffp</h1>
+</div>
+
+<div>
+  <div class="description">
+    A module to model and calculate the properties of Free Floating Planets (FFPs), such as density, mass, distance, and velocity distribution.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<div class="cell" data-execution_count="185">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>The autoreload extension is already loaded. To reload it, use:
+  %reload_ext autoreload</code></pre>
+</div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L92" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="velocity_dispersion_stars_mw" class="level3">
+<h3 class="anchored" data-anchor-id="velocity_dispersion_stars_mw">velocity_dispersion_stars_mw</h3>
+<blockquote class="blockquote">
+<pre><code> velocity_dispersion_stars_mw (r, v_c:float=30)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>v_c</td>
+<td>float</td>
+<td>30</td>
+<td>km/s</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L86" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_ffps_mw" class="level3">
+<h3 class="anchored" data-anchor-id="rho_ffps_mw">rho_FFPs_mw</h3>
+<blockquote class="blockquote">
+<pre><code> rho_FFPs_mw (d:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from Sun in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L78" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_bulge_mw" class="level3">
+<h3 class="anchored" data-anchor-id="rho_bulge_mw">rho_bulge_mw</h3>
+<blockquote class="blockquote">
+<pre><code> rho_bulge_mw (d:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L72" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="cut" class="level3">
+<h3 class="anchored" data-anchor-id="cut">cut</h3>
+<blockquote class="blockquote">
+<pre><code> cut (x)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L69" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="fe" class="level3">
+<h3 class="anchored" data-anchor-id="fe">fE</h3>
+<blockquote class="blockquote">
+<pre><code> fE (xp, yp, zp)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L65" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rsf" class="level3">
+<h3 class="anchored" data-anchor-id="rsf">rsf</h3>
+<blockquote class="blockquote">
+<pre><code> rsf (xp, yp, zp)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L51" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_thick_mw" class="level3">
+<h3 class="anchored" data-anchor-id="rho_thick_mw">rho_thick_mw</h3>
+<blockquote class="blockquote">
+<pre><code> rho_thick_mw (r, z)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>z</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L36" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_thin_mw" class="level3">
+<h3 class="anchored" data-anchor-id="rho_thin_mw">rho_thin_mw</h3>
+<blockquote class="blockquote">
+<pre><code> rho_thin_mw (r, z)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>z</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L30" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="zthin" class="level3">
+<h3 class="anchored" data-anchor-id="zthin">zthin</h3>
+<blockquote class="blockquote">
+<pre><code> zthin (r)</code></pre>
+</blockquote>
+<div class="cell" data-execution_count="187">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>test_eq(zthin(<span class="fl">4.5</span>), zthin45)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="188">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define values for the x-axis</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># d_arr = np.logspace(-2, np.log10(ds), num=100)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>d_arr <span class="op">=</span> np.linspace(<span class="dv">1</span>, ds, num<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>z_arr <span class="op">=</span> [d<span class="op">*</span> np.sin(np.deg2rad(b)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density values for each component</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>rho_total_arr <span class="op">=</span> [rho_FFPs_mw(i) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>rho_bulge_arr <span class="op">=</span> [rho_bulge_mw(i) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>rho_thin_arr <span class="op">=</span> [rho_thin_mw(dist_mw(d_arr[i]), z_arr[i]) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(d_arr))]</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>rho_thick_arr <span class="op">=</span> [rho_thick_mw(dist_mw(d_arr[i]), z_arr[i]) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(d_arr))]</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>rho_dm_arr <span class="op">=</span> [density_mw(dist_mw(d_arr[i])) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(d_arr))]</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the log plot</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_total_arr, label<span class="op">=</span><span class="st">"Total"</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_bulge_arr, label<span class="op">=</span><span class="st">"Bulge"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_thin_arr, label<span class="op">=</span><span class="st">"Thin Disk"</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_thick_arr, label<span class="op">=</span><span class="st">"Thick Disk"</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_dm_arr, label<span class="op">=</span><span class="st">"DM"</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels and legend</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$d$ [kpc]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$\rho$ [M$_\odot$/$\mathrm</span><span class="sc">{kpc}</span><span class="vs">^3$]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'MW, LoS: l = </span><span class="sc">{}</span><span class="st">, b = </span><span class="sc">{}</span><span class="st">'</span>.<span class="bu">format</span>(l,b), fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>plt.legend(fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e0</span>, ds)</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">1e3</span>, <span class="fl">1e10</span>)</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L128" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_ffps_m31" class="level3">
+<h3 class="anchored" data-anchor-id="rho_ffps_m31">rho_FFPs_m31</h3>
+<blockquote class="blockquote">
+<pre><code> rho_FFPs_m31 (a:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td>float</td>
+<td>distance from center of M31 in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L120" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_nucleus_m31" class="level3">
+<h3 class="anchored" data-anchor-id="rho_nucleus_m31">rho_nucleus_m31</h3>
+<blockquote class="blockquote">
+<pre><code> rho_nucleus_m31 (a)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L112" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_disk_m31" class="level3">
+<h3 class="anchored" data-anchor-id="rho_disk_m31">rho_disk_m31</h3>
+<blockquote class="blockquote">
+<pre><code> rho_disk_m31 (a)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L104" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_bulge_m31" class="level3">
+<h3 class="anchored" data-anchor-id="rho_bulge_m31">rho_bulge_m31</h3>
+<blockquote class="blockquote">
+<pre><code> rho_bulge_m31 (a)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>FFP density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L101" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="einasto" class="level3">
+<h3 class="anchored" data-anchor-id="einasto">einasto</h3>
+<blockquote class="blockquote">
+<pre><code> einasto (a, rhoc, dn, ac, n)</code></pre>
+</blockquote>
+<div class="cell" data-execution_count="190">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(quad(rho_FFPs_m31, <span class="fl">4.5</span>, <span class="dv">100</span>))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(quad(rho_FFPs_m31, <span class="fl">4.5</span>, <span class="dv">6</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(259142400.55210653, 0.4102382050077722)
+(85192616.57885173, 9.458280445390402e-07)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="191">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fl">85192616.57885173</span><span class="op">/</span><span class="fl">259142400.55210653</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="191">
+<pre><code>0.3287482727540829</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="192">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density values for each component</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>rho_total_arr <span class="op">=</span> [rho_FFPs_m31(dist_m31(d)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>rho_bulge_arr <span class="op">=</span> [rho_bulge_m31(dist_m31(d)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>rho_disk_arr <span class="op">=</span> [rho_disk_m31(dist_m31(d)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>rho_nucleus_arr <span class="op">=</span> [rho_nucleus_m31(dist_m31(d)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>rho_dm_arr <span class="op">=</span> [density_m31(dist_m31(d)) <span class="cf">for</span> d <span class="kw">in</span> d_arr]</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the log plot</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_total_arr, label<span class="op">=</span><span class="st">"Total"</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_bulge_arr, label<span class="op">=</span><span class="st">"Bulge"</span>)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_disk_arr, label<span class="op">=</span><span class="st">"Disk"</span>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_nucleus_arr, label<span class="op">=</span><span class="st">"Nucleus"</span>)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_dm_arr, label<span class="op">=</span><span class="st">"DM"</span>)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels and legend</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$a$ [kpc]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$\rho$ [M$_\odot$/$\mathrm</span><span class="sc">{kpc}</span><span class="vs">^3$]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'M31, LoS: l = </span><span class="sc">{}</span><span class="st">, b = </span><span class="sc">{}</span><span class="st">'</span>.<span class="bu">format</span>(l,b), fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>plt.legend(fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.xscale("log")</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e1</span>, ds)</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the plot</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/nolansmyth/opt/anaconda3/lib/python3.9/site-packages/LensCalcPy/utils.py:44: RuntimeWarning: divide by zero encountered in double_scalars
+  return rhocM31 / ((r/rsM31) * (1 + r/rsM31)**2)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-21-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="193">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density values for each component</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>a_arr <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">100</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>rho_total_arr <span class="op">=</span> [rho_FFPs_m31(a) <span class="cf">for</span> a <span class="kw">in</span> a_arr]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>rho_bulge_arr <span class="op">=</span> [rho_bulge_m31(a) <span class="cf">for</span> a <span class="kw">in</span> a_arr]</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>rho_disk_arr <span class="op">=</span> [rho_disk_m31(a) <span class="cf">for</span> a <span class="kw">in</span> a_arr]</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>rho_nucleus_arr <span class="op">=</span> [rho_nucleus_m31(a) <span class="cf">for</span> a <span class="kw">in</span> a_arr]</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>rho_dm_arr <span class="op">=</span> [density_m31(a) <span class="cf">for</span> a <span class="kw">in</span> a_arr]</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the log plot</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>plt.plot(a_arr, rho_bulge_arr, label<span class="op">=</span><span class="st">"Bulge"</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>plt.plot(a_arr, rho_disk_arr, label<span class="op">=</span><span class="st">"Disk"</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>plt.plot(a_arr, rho_nucleus_arr, label<span class="op">=</span><span class="st">"Nucleus"</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>plt.plot(a_arr, rho_total_arr, label<span class="op">=</span><span class="st">"Total"</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(a_arr, rho_dm_arr, label="DM")</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels and legend</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$a$ [kpc]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$\rho$ [M$_\odot$/$\mathrm</span><span class="sc">{kpc}</span><span class="vs">^3$]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'M31 density'</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>plt.legend(fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e-2</span>, <span class="fl">1e2</span>)</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the plot</span></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-22-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="194">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define values for the x-axis</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># d_arr = np.logspace(-2, np.log10(ds*0.999), num=100)</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the density values for each component</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>rho_ffp_mw <span class="op">=</span> [rho_FFPs_mw(i) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>rho_ffp_m31 <span class="op">=</span> [rho_FFPs_m31(dist_m31(i)) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>rho_dm_mw <span class="op">=</span> [density_mw(dist_mw(i)) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>rho_dm_m31 <span class="op">=</span> [density_m31(dist_m31(i)) <span class="cf">for</span> i <span class="kw">in</span> d_arr]</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the log plot</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_ffp_mw, label<span class="op">=</span><span class="st">"MW FFPs"</span>, color<span class="op">=</span><span class="st">"blue"</span>)</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_dm_mw, label<span class="op">=</span><span class="st">"MW DM"</span>, color<span class="op">=</span><span class="st">"blue"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_ffp_m31, label<span class="op">=</span><span class="st">"M31 FFPs"</span>, color<span class="op">=</span><span class="st">"red"</span>)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_dm_m31, label<span class="op">=</span><span class="st">"M31 DM"</span>, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(d_arr, rho_total_arr, label="FFPs")</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(d_arr, rho_dm_arr, label="DM")</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels and legend</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$d$ [kpc]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$\rho$ [M$_\odot$/$\mathrm</span><span class="sc">{kpc}</span><span class="vs">^3$]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'LoS: l = </span><span class="sc">{}</span><span class="st">, b = </span><span class="sc">{}</span><span class="st">'</span>.<span class="bu">format</span>(l,b), fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>plt.legend(fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.xscale("log")</span></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e0</span>, ds)</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">1e-10</span>, <span class="fl">1e10</span>)</span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the plot</span></span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-23-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="power-law-mass-function" class="level3">
+<h3 class="anchored" data-anchor-id="power-law-mass-function">Power law Mass function</h3>
+<div class="cell" data-execution_count="286">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dlogM(Z, M, M_norm, p):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Z <span class="op">*</span> (M<span class="op">/</span>M_norm)<span class="op">**-</span>p</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dM(A, M, M_norm, p):</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> A <span class="op">*</span> (M<span class="op">/</span>M_norm)<span class="op">**-</span>p <span class="op">/</span> M</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dM_old(A, M, M_norm, p):</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> A <span class="op">*</span> (M<span class="op">/</span>M_norm)<span class="op">**-</span>p </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>M_norm <span class="op">=</span> <span class="dv">1</span> <span class="co">#solar mass</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dlogM_wrapper(M):</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dN_dlogM(<span class="dv">1</span>, M, M_norm, p)</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dM_wrapper(M):</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dN_dM(<span class="dv">1</span>, M, M_norm, p)</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dN_dM_old_wrapper(M):</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dN_dM_old(<span class="dv">1</span>, M, M_norm, p<span class="op">+</span><span class="dv">1</span>)</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>Z_norm <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="bu">abs</span>(nquad(dN_dlogM_wrapper,[[<span class="op">-</span><span class="dv">15</span>, <span class="op">-</span><span class="dv">5</span>]], opts<span class="op">=</span>{<span class="st">'points'</span>: [<span class="fl">1e-15</span>, <span class="fl">1e-12</span>]})[<span class="dv">0</span>])</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>Z_norm_2 <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="bu">abs</span>(nquad(dN_dM_wrapper,[[<span class="fl">1e-15</span>, <span class="fl">1e-5</span>]], opts<span class="op">=</span>{<span class="st">'points'</span>: [<span class="fl">1e-15</span>, <span class="fl">1e-12</span>]})[<span class="dv">0</span>])</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>Z_norm_3 <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="bu">abs</span>(nquad(dN_dM_old_wrapper,[[<span class="fl">1e-15</span>, <span class="fl">1e-5</span>]], opts<span class="op">=</span>{<span class="st">'points'</span>: [<span class="fl">1e-15</span>, <span class="fl">1e-12</span>]})[<span class="dv">0</span>])</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Z_norm, Z_norm_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.9102392266268375 1.0000000000999996e-15</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="287">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>M_arr <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">15</span>, <span class="op">-</span><span class="dv">5</span>, <span class="dv">100</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>dN_dlogM_arr <span class="op">=</span> Z_norm <span class="op">*</span> np.array([dN_dlogM(<span class="dv">1</span>, M, M_norm, p) <span class="cf">for</span> M <span class="kw">in</span> M_arr])</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>dN_dM_arr <span class="op">=</span> Z_norm_2 <span class="op">*</span> np.array([dN_dM(<span class="dv">1</span>, M, M_norm, p) <span class="cf">for</span> M <span class="kw">in</span> M_arr])</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>dN_dM_old_arr <span class="op">=</span> Z_norm_3 <span class="op">*</span> np.array([dN_dM_old(<span class="dv">1</span>, M, M_norm, <span class="dv">2</span>) <span class="cf">for</span> M <span class="kw">in</span> M_arr])</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>plt.loglog(M_arr, dN_dlogM_arr, label<span class="op">=</span><span class="st">"dN/dlogM"</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>plt.loglog(M_arr, dN_dM_arr, label<span class="op">=</span><span class="st">"dN/dM"</span>)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>plt.loglog(M_arr, dN_dM_old_arr, ls <span class="op">=</span> <span class="st">'--'</span>, label<span class="op">=</span><span class="st">"dN/dM old"</span>)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-25-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/ffp.py#L137" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="ffp" class="level3">
+<h3 class="anchored" data-anchor-id="ffp">Ffp</h3>
+<blockquote class="blockquote">
+<pre><code> Ffp (p:float=1, m_min:float=1e-15, m_max:float=0.001)</code></pre>
+</blockquote>
+<p>A class to represent a PBH population</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>p</td>
+<td>float</td>
+<td>1</td>
+<td>Mass function power law index</td>
+</tr>
+<tr class="even">
+<td>m_min</td>
+<td>float</td>
+<td>1e-15</td>
+<td>Minimum mass in Msun</td>
+</tr>
+<tr class="odd">
+<td>m_max</td>
+<td>float</td>
+<td>0.001</td>
+<td>Maximum mass in Msun</td>
+</tr>
+</tbody>
+</table>
+<div class="cell" data-execution_count="430">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> Ffp(p)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">1</span>, num<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>f</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="430">
+<pre><code>FFP with power law dN / dlogM ~ m^-0.9</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="422">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>M_arr <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">15</span>, <span class="op">-</span><span class="dv">5</span>, num<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(M_arr, f.mass_func(np.log10(M_arr)))</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Mass"</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"dN/dlogM"</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-28-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>diff_rates_finite_mw <span class="op">=</span> []</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates for MW (finite=True)'</span>):</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    diff_rates_finite_mw.append(f.differential_rate_mw(t, finite<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>diff_rates_finite_m31 <span class="op">=</span> []</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates for M31 (finite=True)'</span>):</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    diff_rates_finite_m31.append(f.differential_rate_m31(t, finite<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="366">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_mw_10), label<span class="op">=</span><span class="st">"10km/s"</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_mw), label<span class="op">=</span><span class="st">"30km/s, dN/dlogM"</span>, linestyle<span class="op">=</span><span class="st">'-.'</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_mw_100), label<span class="op">=</span><span class="st">"100km/s"</span>, linestyle<span class="op">=</span><span class="st">'-.'</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$d\Gamma/dt$ [events/star/hr/hr]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Milky Way Differential Rate'</span>)</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e-1</span>, <span class="bu">max</span>(ts))</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylim(1e-25,1e-20)</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-30-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="369">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.loglog(np.array(ts), np.array(diff_rates_finite_m31_10), label="10km/s", linestyle='--')</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_m31), label<span class="op">=</span><span class="st">"30km/s "</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_m31_100), label<span class="op">=</span><span class="st">"100km/s"</span>, linestyle<span class="op">=</span><span class="st">'-.'</span>)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$d\Gamma/dt$ [events/star/hr/hr]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'M31 Differential Rate, higher mass cut'</span>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(ts), <span class="bu">max</span>(ts))</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylim(1e-51,1e-20)</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-31-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="309">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>diff_rates_finite_m31 <span class="op">=</span> []</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    diff_rates_finite_m31.append(f.differential_rate_m31(t, finite<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>diff_rates_finite_mw <span class="op">=</span> []</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    diff_rates_finite_mw.append(f.differential_rate_mw(t, finite<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Computing differential rates (finite=True): 100%|██████████| 10/10 [00:04&lt;00:00,  2.30it/s]
+Computing differential rates (finite=True): 100%|██████████| 10/10 [00:29&lt;00:00,  2.93s/it]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="555">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_mw)<span class="op">/</span>(np.array(diff_rates_finite_mw) <span class="op">+</span> np.array(diff_rates_finite_m31)))</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Relative contribution from MW"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(ts), <span class="bu">max</span>(ts))</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">1e-2</span>,<span class="dv">2</span>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e-2</span>,<span class="fl">1e1</span>)</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="fl">0.07</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="dv">3</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-33-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="563">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>interp_mw <span class="op">=</span> interp1d(ts,diff_rates_finite_mw)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>interp_m31 <span class="op">=</span> interp1d(ts,diff_rates_finite_m31)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(quad(<span class="kw">lambda</span> t: interp_mw(t), <span class="fl">0.07</span>, <span class="dv">3</span>)[<span class="dv">0</span>]<span class="op">/</span>(quad(<span class="kw">lambda</span> t: interp_m31(t), <span class="fl">0.07</span>, <span class="dv">3</span>)[<span class="dv">0</span>] <span class="op">+</span> quad(<span class="kw">lambda</span> t: interp_mw(t), <span class="fl">0.07</span>, <span class="dv">3</span>)[<span class="dv">0</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.7995616816785961</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="557">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_mw), label<span class="op">=</span><span class="st">"MW"</span>)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_finite_m31), label<span class="op">=</span><span class="st">"M31"</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Relative contribution to rate"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(ts), <span class="bu">max</span>(ts))</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e-2</span>,<span class="fl">1e1</span>)</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="fl">0.07</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="dv">3</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylim(1e-2,2)</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-35-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="461">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>m_test <span class="op">=</span> <span class="fl">1e-8</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>diff_rates_monochromatic_m31 <span class="op">=</span> []</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    diff_rates_monochromatic_m31.append(f.differential_rate_m31_monochromatic(t, finite<span class="op">=</span><span class="va">True</span>, m<span class="op">=</span>m_test))</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>diff_rates_monochromatic_mw <span class="op">=</span> []</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    diff_rates_monochromatic_mw.append(f.differential_rate_mw_monochromatic(t, finite<span class="op">=</span><span class="va">True</span>, m<span class="op">=</span>m_test))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Computing differential rates (finite=True): 100%|██████████| 10/10 [00:00&lt;00:00, 76.14it/s]
+Computing differential rates (finite=True): 100%|██████████| 10/10 [00:00&lt;00:00, 10.14it/s]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="478">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> monochromatic_rate_ffp(m, p):</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    ti <span class="op">=</span> <span class="fl">0.07</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    tf <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> Ffp(p)</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    ts <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">1</span>, num<span class="op">=</span><span class="dv">40</span>)</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    diff_rates_monochromatic_m31 <span class="op">=</span> []</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    diff_rates_monochromatic_mw <span class="op">=</span> []</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> ts:</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>        diff_rates_monochromatic_m31.append(f.differential_rate_m31_monochromatic(t, finite<span class="op">=</span><span class="va">True</span>, m<span class="op">=</span>m))</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>        diff_rates_monochromatic_mw.append(f.differential_rate_mw_monochromatic(t, finite<span class="op">=</span><span class="va">True</span>, m<span class="op">=</span>m))</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    diff_interp_m31 <span class="op">=</span> interp1d(ts, diff_rates_monochromatic_m31)</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>    diff_interp_mw <span class="op">=</span> interp1d(ts, diff_rates_monochromatic_mw)</span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>    quad_m31 <span class="op">=</span> quad(diff_interp_m31, ti, tf)[<span class="dv">0</span>]</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>    quad_mw <span class="op">=</span> quad(diff_interp_mw, ti, tf)[<span class="dv">0</span>]</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> quad_m31 <span class="op">+</span> quad_mw</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="479">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>m_arr <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">12</span>, <span class="op">-</span><span class="dv">2</span>, num<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>rates <span class="op">=</span> []</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> tqdm(m_arr, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    rates.append(monochromatic_rate_ffp(m, p))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Computing differential rates (finite=True): 100%|██████████| 30/30 [01:36&lt;00:00,  3.22s/it]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="481">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>plt.plot(m_arr, rates)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">'log'</span>)</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">'log'</span>)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Mass"</span>)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$\Gamma$"</span>)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Monochromatic FFP rate"</span>)</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(m_arr), <span class="bu">max</span>(m_arr))</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">1e-20</span>, <span class="fl">1e-13</span>)</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a><span class="co">#Plot naive HSC conversion</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-39-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="462">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_monochromatic_mw), label<span class="op">=</span><span class="st">"MW"</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(np.array(ts), np.array(diff_rates_monochromatic_m31), label<span class="op">=</span><span class="st">"M31"</span>)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Relative contribution to rate"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(ts), <span class="bu">max</span>(ts))</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Monochromatic, FFP Density distribution, m = </span><span class="sc">{}</span><span class="st"> '</span>.<span class="bu">format</span>(m_test))</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">1e-30</span>,<span class="fl">1e-10</span>)</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="fl">0.07</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>plt.axvline(<span class="dv">3</span>, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-40-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-execution_count="303">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Test that the mass function is normalized correctly</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co"># test_close(abs(nquad(f.mass_func,[[f.m_min, f.m_max]], opts={'points': [f.m_min, f.m_min*1e3, f.m_min*1e5]})[0]), 1, eps=1e-3)</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>test_close(<span class="bu">abs</span>(nquad(f.mass_func,[[np.log10(f.m_min), np.log10(f.m_max)]], opts<span class="op">=</span>{<span class="st">'points'</span>: [f.m_min, f.m_min<span class="op">*</span><span class="fl">1e3</span>, f.m_min<span class="op">*</span><span class="fl">1e5</span>]})[<span class="dv">0</span>]), <span class="dv">1</span>, eps<span class="op">=</span><span class="fl">1e-3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="63">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">7</span>, np.log10(<span class="fl">1e3</span>), num<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>diff_rates <span class="op">=</span> []</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=False)'</span>):</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    diff_rates.append(f.differential_rate_total(t, finite<span class="op">=</span><span class="va">False</span>))</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>diff_rates_finite <span class="op">=</span> []</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> tqdm(ts, desc<span class="op">=</span><span class="st">'Computing differential rates (finite=True)'</span>):</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>    diff_rates_finite.append(f.differential_rate_total(t, finite<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Computing differential rates (finite=False): 100%|██████████| 30/30 [01:56&lt;00:00,  3.87s/it]
+Computing differential rates (finite=True): 100%|██████████| 30/30 [01:27&lt;00:00,  2.90s/it]</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="64">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">#new</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>plt.loglog(ts, diff_rates, color<span class="op">=</span><span class="st">"blue"</span>)</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>plt.loglog(ts, diff_rates_finite, color<span class="op">=</span><span class="st">"red"</span>)</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$t_E$ [h]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$d\Gamma/dt$ [events/star/hr/hr]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.xlim([0.009, 1e3])</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylim([1e-20, 1e-7])</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="bu">min</span>(ts), <span class="bu">max</span>(ts))</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-43-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> crossing_time(m, d):</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#rough crossing time in hours</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.5</span><span class="op">*</span> (m<span class="op">/</span><span class="fl">1e-8</span>)<span class="op">**</span>(<span class="fl">0.5</span>) <span class="op">*</span> (d<span class="op">/</span><span class="dv">100</span>)<span class="op">**</span><span class="fl">0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scientific_format(crossing_time(<span class="fl">1e-15</span>, <span class="dv">100</span>),<span class="dv">1</span>))</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="co">#So it makes sense the rate is peaked for t~1e-4 hours since that is the crossing time for the smallest mass, which contributes the most</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$1.6 \times 10^{-4}$</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Lower HSC Sensitivity is about 7e-2 hours, this corresponds to masses of ~2e-10</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scientific_format(crossing_time(<span class="fl">2e-10</span>, <span class="dv">100</span>),<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$7.1 \times 10^{-2}$</code></pre>
+</div>
+</div>
+</section>
+<section id="ensure-limits-are-independent-of-mass-function-startend" class="level3">
+<h3 class="anchored" data-anchor-id="ensure-limits-are-independent-of-mass-function-startend">Ensure limits are independent of mass function start/end</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_n_events(A, alpha<span class="op">=</span><span class="dv">2</span>, finite<span class="op">=</span><span class="va">False</span>, m_min<span class="op">=</span><span class="fl">1e-15</span>):</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Now A is number of FFPs per star</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> Ffp(alpha, m_min<span class="op">=</span>m_min)</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    ti <span class="op">=</span> <span class="fl">0.07</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    tf <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>    t_es <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="dv">1</span>, num<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    diff_rates <span class="op">=</span> f.compute_differential_rate(t_es, finite<span class="op">=</span>finite)</span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    rate_interp <span class="op">=</span> interp1d(t_es, diff_rates)</span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>    dnds <span class="op">=</span> quad(rate_interp, ti, tf)[<span class="dv">0</span>]</span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_sources<span class="op">*</span>efficiency<span class="op">*</span>dnds<span class="op">*</span>obsTime<span class="op">*</span>A</span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_constraint_iso(m_iso, alpha<span class="op">=</span><span class="dv">2</span>, finite<span class="op">=</span><span class="va">False</span>, m_min<span class="op">=</span><span class="fl">1e-15</span>):</span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> Ffp(alpha, m_min<span class="op">=</span>m_min)</span>
+<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> m_iso <span class="op">&lt;</span> f.m_min:</span>
+<span id="cb59-16"><a href="#cb59-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">'Mass must be greater than the minimum mass of the FFP mass function'</span>)</span>
+<span id="cb59-17"><a href="#cb59-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb59-18"><a href="#cb59-18" aria-hidden="true" tabindex="-1"></a>    n_events <span class="op">=</span> get_n_events(<span class="dv">1</span>, alpha<span class="op">=</span>alpha, finite<span class="op">=</span>finite, m_min<span class="op">=</span>m_min)</span>
+<span id="cb59-19"><a href="#cb59-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Porportion of ISOs above threshold</span></span>
+<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a>    proportion_above_threshold <span class="op">=</span> nquad(f.mass_func,[[m_iso, f.m_max]], opts<span class="op">=</span>{<span class="st">'points'</span>: [f.m_min, f.m_min<span class="op">*</span><span class="fl">1e3</span>, f.m_min<span class="op">*</span><span class="fl">1e5</span>]})[<span class="dv">0</span>]<span class="op">*</span>f.Z</span>
+<span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Maximum number of total allowed ISOs per star</span></span>
+<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a>    N_thresh <span class="op">=</span> <span class="fl">4.74</span><span class="op">/</span>n_events</span>
+<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-26"><a href="#cb59-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Maximum number of allowed ISOs per star of mass m_iso or above</span></span>
+<span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> N_thresh <span class="op">*</span> proportion_above_threshold</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>m_mins <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">15</span>, <span class="op">-</span><span class="dv">7</span>, num<span class="op">=</span><span class="dv">24</span>)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_constraint_iso_wrapped(m_min):</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> get_constraint_iso(<span class="fl">1e-7</span>, alpha<span class="op">=</span><span class="dv">2</span>, finite<span class="op">=</span><span class="va">True</span>, m_min<span class="op">=</span>m_min)</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> Pool() <span class="im">as</span> p:</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>   isos_per_star_arr <span class="op">=</span> <span class="bu">list</span>(tqdm(p.imap(get_constraint_iso_wrapped, m_mins), total<span class="op">=</span><span class="bu">len</span>(m_mins)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|██████████| 20/20 [06:52&lt;00:00, 20.64s/it]</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Expect to see that results are independent of m_min until the cutoff is in the range that HSC is sensitive to</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Looks good!</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>plt.plot(m_mins, isos_per_star_arr)</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">'log'</span>)</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">'log'</span>)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylim(1e7, 1e8)</span></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r"$m_</span><span class="sc">{min}</span><span class="vs">$ [M$_\odot$]"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r"$N_</span><span class="sc">{ISO}</span><span class="vs">$"</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Number of ISOs per star of mass 1e-7'</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="01_ffp_files/figure-html/cell-49-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
