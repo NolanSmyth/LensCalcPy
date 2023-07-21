@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['zthin', 'rho_thin_mw', 'rho_thick_mw', 'rsf', 'fE', 'cut', 'rho_bulge_mw', 'rho_FFPs_mw',
            'velocity_dispersion_stars_mw', 'einasto', 'rho_bulge_m31', 'rho_disk_m31', 'rho_nucleus_m31',
-           'rho_FFPs_m31', 'Ffp']
+           'rho_FFPs_m31', 'velocity_dispersion_stars_m31', 'Ffp']
 
 # %% ../nbs/01_ffp.ipynb 3
 from .parameters import *
@@ -93,6 +93,7 @@ def velocity_dispersion_stars_mw(r,
                                  v_c: float = 30 # km/s
                                 #  v_c: float = 10 # km/s
                                 ):
+    #Take 30 km/s following table 2 of https://arxiv.org/pdf/2306.12464.pdf
     return v_c
 
 # %% ../nbs/01_ffp.ipynb 8
@@ -132,8 +133,16 @@ def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
     #The bulge/nucleus is excluded from the m31 survey
     return rho_disk_m31(a)
 
+def velocity_dispersion_stars_m31(r,
+                                 v_c: float = 60 # km/s
+                                #  v_c: float = 30 # km/s
 
-# %% ../nbs/01_ffp.ipynb 17
+                                ):
+    # Use 60 km/s for disk following https://iopscience.iop.org/article/10.1088/0004-637X/695/1/442/pdf
+    return v_c
+
+
+# %% ../nbs/01_ffp.ipynb 12
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -148,8 +157,8 @@ class Ffp(Lens):
         Initialize the PBH population
         """
         
-        # self.ut_interp = ut_interp
-        self.ut_interp = ut_interp_mw
+        self.ut_interp = ut_interp
+        # self.ut_interp = ut_interp_mw
 
         self.p = p
         #Define range of power law we want to consider
@@ -292,7 +301,7 @@ class Ffp(Lens):
 
     def differential_rate_integrand_m31(self, umin, d, mf, t, finite=False):
         # return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
-        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_stars_mw, finite=finite, density_func_uses_d=False)
+        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_stars_m31, finite=finite, density_func_uses_d=False)
 
     def differential_rate_m31(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
