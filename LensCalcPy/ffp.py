@@ -138,7 +138,7 @@ class Ffp(Lens):
     """A class to represent a PBH population"""
 
     def __init__(self,
-                p: float = 2, # Mass function power law index
+                p: float = 1, # Mass function power law index
                 m_min: float = 1e-15, # Minimum mass in Msun
                 # m_max: float = 1e-5, # Maximum mass in Msun
                 m_max: float = 1e-3, # Maximum mass in Msun
@@ -148,12 +148,14 @@ class Ffp(Lens):
         Initialize the PBH population
         """
         
-        self.ut_interp = ut_interp
+        # self.ut_interp = ut_interp
+        self.ut_interp = ut_interp_mw
+
         self.p = p
         #Define range of power law we want to consider
         self.m_min = m_min
         self.m_max = m_max
-        self.M_norm = 1
+        self.M_norm = 1 #solar mass
         # self.Z = self.pl_norm(self.p)
         self.Z = self.pl_norm_new()
 
@@ -252,8 +254,9 @@ class Ffp(Lens):
 
             # result += single_result * (mf ** -self.p) * dm  # multiply by mass function and by dm
             # result += single_result * (mf ** -self.p) / mf * dm  # multiply by mass function and by dm
+            # print(10**mf, single_result* ((10**mf/1) ** -self.p) * dm)
             
-            result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dm this is for dN/dlogM
+            result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
 
         result *= self.Z  # normalization
         return result
