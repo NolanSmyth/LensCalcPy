@@ -1,0 +1,19 @@
+font.family: serif
+font.serif: CMU Serif
+axes.prop_cycle: cycler('color', ['steelblue', 'firebrick', 'goldenrod', 'mediumorchid', 'darkslateblue', 'DarkSalmon', 'LightSkyBlue', 'Navy', 'Peru'])
+
+text.usetex: true
+text.latex.preamble: \usepackage{physics} \usepackage{amsmath} \usepackage{bm}
+
+xtick.top: true 
+ytick.right: true 
+xtick.direction: in 
+ytick.direction: in
+axes.titlesize: 18
+axes.labelsize: 14
+xtick.labelsize: 13
+ytick.labelsize: 13
+legend.fontsize: 11
+font.size: 13
+figure.figsize: 8, 6
+legend.frameon: false

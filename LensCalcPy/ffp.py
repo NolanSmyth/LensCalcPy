@@ -18,6 +18,8 @@ import pickle
 import functools
 from pathos.multiprocessing import ProcessingPool as Pool
 
+import functools
+
 from fastcore.test import *
 from tqdm import tqdm
 
@@ -90,8 +92,8 @@ def rho_FFPs_mw(d: float, # distance from Sun in kpc
     return (rho_thin_mw(r, z) + rho_thick_mw(r, z) + rho_bulge_mw(d)) 
 
 def velocity_dispersion_stars_mw(r,
-                                 v_c: float = 30 # km/s
-                                #  v_c: float = 10 # km/s
+                                #  v_c: float = 30 # km/s
+                                 v_c: float = 15 # km/s
                                 ):
     #Take 30 km/s following table 2 of https://arxiv.org/pdf/2306.12464.pdf
     return v_c
@@ -102,40 +104,57 @@ def velocity_dispersion_stars_mw(r,
 def einasto(a, rhoc, dn, ac, n):
     return rhoc * np.exp(-dn *((a/ac)**(1/n) - 1))
 
-def rho_bulge_m31(a, 
+def rho_bulge_m31(d, 
                 ) -> float: # FFP density in Msun/kpc^3
+    q = 0.72
+    i = np.deg2rad(90-77)  # inclination angle of m31 disk in radians
+    z = d * np.sin(i)
+    r = d * np.cos(i)
+    a = (r**2 + z**2/q**2)**0.5
     rhoc = 9.201e-1 * (1e3)**3 #Msun/kpc^3
     dn = 7.769
     ac = 1.155 #kpc
     n = 2.7
     return einasto(a, rhoc, dn, ac, n) 
 
-def rho_disk_m31(a,
+def rho_disk_m31(d,
                     ) -> float: # FFP density in Msun/kpc^3
+    q = 0.17
+    i = np.deg2rad(90-77)  # inclination angle of m31 disk in radians
+    z = d * np.sin(i)
+    r = d * np.cos(i)
+    a = (r**2 + z**2/q**2)**0.5
     rhoc = 1.307e-2 * (1e3)**3 #Msun/kpc^3
     dn = 3.273
     ac = 10.67 #kpc
     n = 1.2
     return einasto(a, rhoc, dn, ac, n) 
 
-def rho_nucleus_m31(a,
+def rho_nucleus_m31(d,
                     ) -> float: # FFP density in Msun/kpc^3
+    q = 0.99
+    i = np.deg2rad(90-77)  # inclination angle of m31 disk in radians
+    z = d * np.sin(i)
+    r = d * np.cos(i)
+    a = (r**2 + z**2/q**2)**0.5
     rhoc = 1.713 * (1e3)**3 #Msun/kpc^3
     dn = 11.668
     ac = 0.0234 #kpc
     n = 4.0
     return einasto(a, rhoc, dn, ac, n) 
 
-def rho_FFPs_m31(a: float, # distance from center of M31 in kpc
+def rho_FFPs_m31(d: float, # distance from center of M31 in kpc
              ) -> float: # FFP density in Msun/kpc^3
     # return (rho_bulge_m31(a) + rho_disk_m31(a) + rho_nucleus_m31(a))
 
     #The bulge/nucleus is excluded from the m31 survey
-    return rho_disk_m31(a)
+    if use_max_density:
+        return rho_disk_m31(d) * 1.5
+    return rho_disk_m31(d) 
 
 def velocity_dispersion_stars_m31(r,
-                                 v_c: float = 60 # km/s
-                                #  v_c: float = 30 # km/s
+                                #  v_c: float = 60 # km/s
+                                 v_c: float = 30 # km/s
 
                                 ):
     # Use 60 km/s for disk following https://iopscience.iop.org/article/10.1088/0004-637X/695/1/442/pdf
@@ -289,22 +308,24 @@ class Ffp(Lens):
                                         )
         return result
         
-    def differential_rate_integrand_mw(self, umin, d, mf, t, finite=False):
-        # return self.differential_rate_integrand(umin, d, mf, t, dist_mw, rho_FFPs_mw, velocity_dispersion_mw, finite=finite, density_func_uses_d=True)
-        return self.differential_rate_integrand(umin, d, mf, t, dist_mw, rho_FFPs_mw, velocity_dispersion_stars_mw, finite=finite, density_func_uses_d=True)
+    def differential_rate_integrand_mw(self, umin, d, mf, t, finite=False, vel_func = velocity_dispersion_stars_mw):
+        return self.differential_rate_integrand(umin, d, mf, t, dist_mw, rho_FFPs_mw, vel_func, finite=finite, density_func_uses_d=True)
         
-    def differential_rate_mw(self, t, finite=False):
-        return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
+    def differential_rate_mw(self, t, finite=False, v_disp = 30):
+        f = functools.partial(self.differential_rate_integrand_mw, vel_func = lambda r: v_disp)
+        return self.differential_rate(t, f, finite=finite)
+        # return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
     
     def differential_rate_mw_monochromatic(self, t, finite=False, m=1e-10):
         return self.differential_rate_monochromatic(t, self.differential_rate_integrand_mw, finite=finite, m=m)
 
-    def differential_rate_integrand_m31(self, umin, d, mf, t, finite=False):
-        # return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_m31, finite=finite, density_func_uses_d=False)
-        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, velocity_dispersion_stars_m31, finite=finite, density_func_uses_d=False)
+    def differential_rate_integrand_m31(self, umin, d, mf, t, finite=False, vel_func = velocity_dispersion_stars_m31):
+        return self.differential_rate_integrand(umin, d, mf, t, dist_m31, rho_FFPs_m31, vel_func , finite=finite, density_func_uses_d=False)
 
-    def differential_rate_m31(self, t, finite=False):
-        return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
+    def differential_rate_m31(self, t, finite=False, v_disp = 60):
+        f = functools.partial(self.differential_rate_integrand_m31, vel_func = lambda r: v_disp)
+        return self.differential_rate(t, f, finite=finite)
+        # return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
     
     def differential_rate_m31_monochromatic(self, t, finite=False, m=1e-10):
         return self.differential_rate_monochromatic(t, self.differential_rate_integrand_m31, finite=finite, m=m)

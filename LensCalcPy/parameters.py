@@ -3,8 +3,8 @@
 # %% auto 0
 __all__ = ['rhoc', 'rs', 'G', 'rhocM31', 'rsM31', 'c', 'fpbh', 'ut', 'kpctokm', 'htosec', 'rEarth', 'r_max', 'dsM31', 'l', 'b',
            'ds', 'obsTime', 'survey_area', 'n_sources', 'efficiency', 'lam', 'zthinSol', 'zthickSol', 'zthin45', 'rsol',
-           'rdBreak', 'rthin', 'rthick', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp', 'cpar', 'rho0_B',
-           'Rc', 'alphabar']
+           'rdBreak', 'rthin', 'rthick', 'use_max_density', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp',
+           'cpar', 'rho0_B', 'Rc', 'alphabar']
 
 # %% ../nbs/05_parameters.ipynb 3
 rhoc = 4.88e6 # MW nfw central density parameter in Msol kpc^-3
@@ -53,8 +53,17 @@ rsol = 8.160  # solar position, kpc
 rdBreak = 5.3  # kpc, turnover point for density profile
 rthin = 2.6  # kpc
 rthick = 2.2  # kpc
-rho_thin_Sol = 4.2e-2 * (1e3)**3  # local solar thin disk density main sequence stars, Msol kpc^-3
-rho_thick_Sol = 1.7e-3 * (1e3)**3  # Msol kpc^-3
+
+# from https://arxiv.org/pdf/1704.05063.pdf 4.0 +/- 0.2 * 10^(-2) Msol pc^-3 for main sequence
+use_max_density = True
+#Upper density values
+rho_thin_Sol = (4.2e-2 + 5.1e-3) * (1e3)**3  # local solar thin disk density main sequence stars and White Dwarfs, Msol kpc^-3
+#Lower density values
+# rho_thin_Sol = (3.8e-2 + 5.1e-3) * (1e3)**3  # local solar thin disk density main sequence stars and White Dwarfs, Msol kpc^-3
+
+# local solar thick disk density main sequence stars and White Dwarfs. Normalized to be 4% of thin disk
+rho_thick_Sol = rho_thin_Sol * 0.04 
+
 
 # Bulge Params
 x0 = 0.67  # kpc
