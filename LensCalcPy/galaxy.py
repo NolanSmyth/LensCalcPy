@@ -22,8 +22,10 @@ class Galaxy(ABC):
         for key, value in parameters.items():
             setattr(self, key, value)
 
+    @abstractmethod
     def velocity_dispersion_stars(self, r, v_c):
-        return v_c
+        # Velocity dispersion of stars at distance r from center of galaxy
+        pass
     
     @abstractmethod
     def dist_center(self, d):
@@ -130,10 +132,12 @@ class MilkyWayModel(Galaxy):
         _, _, z = self.get_primed_coords(d)
         return (self.rho_thin(r, z) + self.rho_thick(r, z) + self.rho_bulge(d))
 
-    def density_dm(self, d: float, # distance to MW center in kpc
+    def density_dm(self, r: float, # distance to MW center in kpc
                 ) -> float: # DM density in Msun/kpc^3
-        r = self.dist_center(d)
         return rhoc / ((r/rs) * (1 + r/rs)**2)
+    
+    def velocity_dispersion_stars(self, r, v_c: float = 30):
+        return v_c
 
 
 # %% ../nbs/08_galaxy.ipynb 7
@@ -147,41 +151,24 @@ class M31Model(Galaxy):
     def einasto(self, a, rhoc, dn, ac, n):
         return rhoc * np.exp(-dn *((a/ac)**(1/n) - 1))
 
-    def rho_bulge(self, d) -> float:
-        q = 0.72
-        i = np.deg2rad(90-77)
+    def calculate_a(self, d, q, i):
         z = d * np.sin(i)
         r = d * np.cos(i)
-        a = (r**2 + z**2/q**2)**0.5
-        rhoc = 9.201e-1 * (1e3)**3
-        dn = 7.769
-        ac = 1.155
-        n = 2.7
+        return (r**2 + z**2/q**2)**0.5
+
+    def density_component(self, d, q, rhoc, dn, ac, n):
+        i = np.deg2rad(90-77)
+        a = self.calculate_a(d, q, i)
         return self.einasto(a, rhoc, dn, ac, n)
+
+    def rho_bulge(self, d) -> float:
+        return self.density_component(d, q=0.72, rhoc=9.201e-1 * (1e3)**3, dn=7.769, ac=1.155, n=2.7)
 
     def rho_disk(self, d) -> float:
-        q = 0.17
-        i = np.deg2rad(90-77)
-        z = d * np.sin(i)
-        r = d * np.cos(i)
-        a = (r**2 + z**2/q**2)**0.5
-        rhoc = 1.307e-2 * (1e3)**3
-        dn = 3.273
-        ac = 10.67
-        n = 1.2
-        return self.einasto(a, rhoc, dn, ac, n)
+        return self.density_component(d, q=0.17, rhoc=1.307e-2 * (1e3)**3, dn=3.273, ac=10.67, n=1.2)
 
     def rho_nucleus(self, d) -> float:
-        q = 0.99
-        i = np.deg2rad(90-77)
-        z = d * np.sin(i)
-        r = d * np.cos(i)
-        a = (r**2 + z**2/q**2)**0.5
-        rhoc = 1.713 * (1e3)**3
-        dn = 11.668
-        ac = 0.0234
-        n = 4.0
-        return self.einasto(a, rhoc, dn, ac, n)
+        return self.density_component(d, q=0.99, rhoc=1.713 * (1e3)**3, dn=11.668, ac=0.0234, n=4.0)
 
     def density_stars(self, d: float) -> float:
         #Only use disk density since bulge and nucleus are mostly blocked out in HSC survey
