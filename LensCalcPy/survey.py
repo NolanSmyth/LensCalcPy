@@ -25,18 +25,20 @@ class Survey:
                  b: float, # Galactic latitude in degrees
                  source_dist:float, # Distance to observation source in kpc
                  obs_time: float, # Observation time in hours
+                 cadence: float, # Cadence in hours
                  survey_area: float, # Survey area in deg^2
                  n_sources: int, # Number of sources observed in survey
                  efficiency: float = 1, # Efficiency of survey
                  use_mw_source: bool = False, # Use Milky Way as source
                  mw_model: MilkyWayModel = None,
-                m31_model: M31Model = None, 
+                 m31_model: M31Model = None, 
                  ):
      
         self.l = l 
         self.b = b 
         self.source_dist = source_dist 
         self.obs_time = obs_time 
+        self.cadence = cadence
         self.survey_area = survey_area
         self.pbh = None # PBH population
         self.ffp = None # FFP population
@@ -47,7 +49,7 @@ class Survey:
         self.m31_model = m31_model or M31Model(m31_parameters)
 
     def __str__(self) -> str:
-        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, survey_area={self.survey_area}, n_sources={self.n_sources})"
+        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, cadence = {self.cadence}, survey_area={self.survey_area}, n_sources={self.n_sources}, efficiency={self.efficiency}, ds={self.ds})"
     __repr__ = __str__
     
     
