@@ -179,5 +179,5 @@ class M31Model(Galaxy):
     def density_dm(self, r: float) -> float:
         return rhocM31 / ((r/rsM31) * (1 + r/rsM31)**2)
     
-    def velocity_dispersion_stars(self, r, v_c: float = 30) -> float:
+    def velocity_dispersion_stars(self, r, v_c: float = 60) -> float:
         return v_c
