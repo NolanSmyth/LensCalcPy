@@ -170,13 +170,16 @@ class Ffp(Lens):
                 m_min: float = 1e-15, # Minimum mass in Msun
                 # m_max: float = 1e-5, # Maximum mass in Msun
                 m_max: float = 1e-3, # Maximum mass in Msun
-
+                use_mw_source: bool = False,
                 ):
         """
         Initialize the PBH population
         """
         
-        self.ut_interp = ut_interp
+        if use_mw_source:
+            self.ut_interp = ut_interp_mw #assuming source is 8.5 kpc away
+        else:
+            self.ut_interp = ut_interp # assuming source is in m31, 770 kpc away
         # self.ut_interp = ut_interp_mw
 
         self.p = p

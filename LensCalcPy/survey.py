@@ -26,8 +26,7 @@ class Survey:
                  obs_time: float, # Observation time in hours
                  survey_area: float, # Survey area in deg^2
                  n_sources: int, # Number of sources observed in survey
-                 n_pbh: int = int(1e2), # Number of PBHs detected
-                 n_ffp: int = int(1e4), # Number of FFPs detected
+                 use_mw_source: bool = False, # Use Milky Way as source
                  ):
      
         self.l = l 
@@ -37,9 +36,8 @@ class Survey:
         self.survey_area = survey_area
         self.pbh = None # PBH population
         self.ffp = None # FFP population
-        self.n_pbh = n_pbh # Number of PBHs detected
-        self.n_ffp = n_ffp # Number of FFPs detected
         self.n_sources = n_sources # Number of sources observed in the Milky Way
+        self.use_mw_source = use_mw_source
 
     def __str__(self) -> str:
         return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, survey_area={self.survey_area})"
@@ -58,7 +56,7 @@ class Survey:
                 p: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(p)
+        self.ffp = Ffp(p, use_mw_source=self.use_mw_source)
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,
