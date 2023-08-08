@@ -2,9 +2,9 @@
 
 # %% auto 0
 __all__ = ['rhoc', 'rs', 'G', 'rhocM31', 'rsM31', 'c', 'fpbh', 'ut', 'kpctokm', 'htosec', 'rEarth', 'r_max', 'dsM31', 'l', 'b',
-           'ds', 'obsTime', 'n_sources', 'efficiency', 'lam', 'zthinSol', 'zthickSol', 'zthin45', 'rsol', 'rdBreak',
-           'rthin', 'rthick', 'use_max_density', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp', 'cpar',
-           'rho0_B', 'Rc', 'alphabar']
+           'ds', 'obsTime', 'survey_area', 'n_sources', 'efficiency', 'lam', 'zthinSol', 'zthickSol', 'zthin45', 'rsol',
+           'rdBreak', 'rthin', 'rthick', 'use_max_density', 'rho_thin_Sol', 'rho_thick_Sol', 'x0', 'y0', 'z0', 'cperp',
+           'cpar', 'rho0_B', 'Rc', 'alphabar']
 
 # %% ../nbs/05_parameters.ipynb 3
 rhoc = 4.88e6 # MW nfw central density parameter in Msol kpc^-3
@@ -48,7 +48,7 @@ ds = 770 #distance to source in kpc
 dsM31 = 770 # kpc
 obsTime = 7 # observation time in hours
 # obsTime = 7 * 10# observation time in hours
-# survey_area = 0 # survey area in square degrees
+survey_area = 0 # survey area in square degrees
 n_sources = 8.7e7 # number of sources in the survey
 efficiency = 0.6 # efficiency of the survey
 lam = 6000 # wavelength in angstroms
