@@ -126,18 +126,22 @@ class MilkyWayModel(Galaxy):
         else:
             return 1
         
-    def rho_bulge(self, d) -> float:
-        xp, yp, zp = self.get_primed_coords(d)
+    def rho_bulge(self, d, l = l, b = b) -> float:
+        xp, yp, zp = self.get_primed_coords(d, l = l, b = b)
         xp, yp, zp = abs(xp), abs(yp), abs(zp)
         r = (xp**2 + yp**2 + zp**2)**0.5
         return rho0_B * self.fE(xp, yp, zp) * self.cut((r - Rc) / 0.5)
 
-    def density_stars(self, d) -> float:
+    def density_stars(self, d, 
+                      l: float = l,
+                      b: float = b) -> float:
         r = self.dist_center(d, l=l, b=b)
-        _, _, z = self.get_primed_coords(d)
-        return (self.rho_thin(r, z) + self.rho_thick(r, z) + self.rho_bulge(d))
+        _, _, z = self.get_primed_coords(d, l=l, b=b)
+        return (self.rho_thin(r, z) + self.rho_thick(r, z) + self.rho_bulge(d, l = l, b = b))
 
     def density_dm(self, d: float, # distance along line of sight in kpc
+                    l: float = l, # galactic longitude in degrees
+                    b: float = b, # galactic latitude in degrees
                 ) -> float: # DM density in Msun/kpc^3
         r = self.dist_center(d, l=l, b=b)
         return rhoc / ((r/rs) * (1 + r/rs)**2)
@@ -179,14 +183,19 @@ class M31Model(Galaxy):
     def rho_nucleus(self, r) -> float:
         return self.density_component(r, q=0.99, rhoc=1.713 * (1e3)**3, dn=11.668, ac=0.0234, n=4.0)
 
-    def density_stars(self, d: float) -> float:
+    def density_stars(self, d: float,
+                      l: float = l,
+                      b: float = b) -> float:
         #Only use disk density since bulge and nucleus are mostly blocked out in HSC survey
         r = self.dist_center(d)
         if self.use_max_density:
             return self.rho_disk(r) * 1.5
         return self.rho_disk(r)
 
-    def density_dm(self, d: float) -> float:
+    def density_dm(self, 
+                   d: float,
+                   l: float = l,
+                   b: float = b) -> float:
         r = self.dist_center(d)
         return rhocM31 / ((r/rsM31) * (1 + r/rsM31)**2)
     

@@ -5,6 +5,7 @@ __all__ = ['Survey']
 
 # %% ../nbs/03_survey.ipynb 3
 import numpy as np
+import pandas as pd
 from .pbh import *
 from .ffp import *
 from .utils import *
@@ -49,7 +50,7 @@ class Survey:
         self.m31_model = m31_model or M31Model(m31_parameters)
 
     def __str__(self) -> str:
-        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, cadence = {self.cadence}, survey_area={self.survey_area}, n_sources={self.n_sources}, efficiency={self.efficiency}, ds={self.ds})"
+        return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, cadence = {self.cadence}, survey_area={self.survey_area}, n_sources={self.n_sources}, efficiency={self.efficiency})"
     __repr__ = __str__
     
     
