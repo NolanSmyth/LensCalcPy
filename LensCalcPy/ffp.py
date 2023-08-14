@@ -35,16 +35,20 @@ class Ffp(Lens):
                 mw_model: MilkyWayModel = None,
                 m31_model: M31Model = None, 
                 l = None, # Galactic longitude
-                b = None # Galactic latitude
+                b = None, # Galactic latitude
+                u_t = 1, #threshold impact parameter in point-source limit
+                ds = 770,
                 ):
         """
         Initialize the PBH population
         """
-        if use_mw_source:
-            self.ut_interp = ut_interp_mw #assuming source is 8.5 kpc away
-        else:
-            self.ut_interp = ut_interp # assuming source is in m31, 770 kpc away
-        # self.ut_interp = ut_interp_mw
+        # if use_mw_source:
+        #     self.ut_interp = ut_interp_mw #assuming source is 8.5 kpc away
+        # else:
+        #     self.ut_interp = ut_interp # assuming source is in m31, 770 kpc away
+        # # self.ut_interp = ut_interp_mw
+
+        self.ut_interp = ut_interp_rho
 
         self.p = p
         #Define range of power law we want to consider
@@ -64,6 +68,8 @@ class Ffp(Lens):
             raise ValueError("Galactic latitude must be specified")
         self.l = l
         self.b = b
+        self.u_t = u_t
+        self.ds = ds
 
     
     def __str__(self) -> str:
@@ -98,7 +104,7 @@ class Ffp(Lens):
 
     def differential_rate_integrand(self, umin, d, mf, t, dist_func, density_func, v_disp_func, finite=False):
         r = dist_func(d, self.l, self.b)
-        ut = self.umin_upper_bound(d, mf) if (self.ut_interp and finite) else 1
+        ut = self.umin_upper_bound(d, mf) if (self.ut_interp and finite) else self.u_t
         if ut <= umin:
             return 0
         v_rad = velocity_radial(d, mf, umin, t * htosec, ut)  
@@ -125,7 +131,7 @@ class Ffp(Lens):
                 dm = mf_values[i] - mf_values[i-1]
             if finite:
                 single_result, error = dblquad(integrand_func, 
-                                            0, ds, 
+                                            0, self.ds, 
                                             lambda d: 0, 
                                             lambda d: self.umin_upper_bound(d, 10**mf),
                                             # args=(mf, t),
@@ -136,9 +142,9 @@ class Ffp(Lens):
             else:
                 single_result, error = dblquad(integrand_func,
                                                #Without finite size effects, integral blows up at M31 center
-                                            0, ds*0.99,
+                                            0, self.ds*0.99,
                                             lambda d: 0, 
-                                            lambda d: ut,
+                                            lambda d: self.u_t,
                                             args=(10**mf, t),
                                             # epsabs=0,
                                             # epsrel=1e-2,
@@ -155,7 +161,7 @@ class Ffp(Lens):
     
         if finite:
             result, error = dblquad(integrand_func, 
-                                        0, ds, 
+                                        0, self.ds, 
                                         lambda d: 0, 
                                         lambda d: self.umin_upper_bound(d, m),
                                         args=(m, t),
@@ -165,7 +171,7 @@ class Ffp(Lens):
                                             #Without finite size effects, integral blows up at M31 center
                                         0, ds*0.99,
                                         lambda d: 0, 
-                                        lambda d: ut,
+                                        lambda d: self.u_t,
                                         args=(m, t),
                                         )
         return result
@@ -203,7 +209,9 @@ class Ffp(Lens):
     def umin_upper_bound(self, d, m):
         if self.ut_interp is None:
             self.make_ut_interp()
-        return self.ut_interp(d, m)[0]
+        rho = rho_func(m, d, self.ds)
+        return self.ut_interp(rho)
+        # return self.ut_interp(d, m)[0]
     
     def differential_rate_total(self, t, finite=False):
         return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)
