@@ -7,6 +7,7 @@ __all__ = ['Pbh']
 from .parameters import *
 from .utils import *
 from .lens import *
+from .galaxy import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,11 +28,26 @@ class Pbh(Lens):
 
     def __init__(self,
                 mass: float, # PBH mass in solar masses
-                f_dm: float # PBH fraction of the DM density
+                f_dm: float, # PBH fraction of the DM density
+                mw_model=None,
+                m31_model=None,
+                l = None,
+                b = None,
                 ):
         """
         Initialize the PBH population
         """
+
+        self.mw_model = mw_model or MilkyWayModel(mw_parameters)
+        self.m31_model = m31_model or M31Model(m31_parameters)
+        
+        if l is None:
+            raise ValueError("Galactic longitude must be specified")
+        if b is None:
+            raise ValueError("Galactic latitude must be specified")
+        self.l = l
+        self.b = b
+
         if mass < m_low_interp or mass > m_high_interp:
             raise ValueError("PBH mass must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
         self.mass = mass
