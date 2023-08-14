@@ -62,14 +62,14 @@ class Survey:
                 f_dm: float = 1, # fraction of DM in PBHs
                 ):
         """adds a PBH population to the survey"""
-        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b)
+        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
         return
     
     def add_ffp(self,
                 p: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(p, use_mw_source=self.use_mw_source, l=self.l, b=self.b, u_t=self.u_t)
+        self.ffp = Ffp(p, use_mw_source=self.use_mw_source, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,

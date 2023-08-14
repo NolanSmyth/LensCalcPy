@@ -33,6 +33,8 @@ class Pbh(Lens):
                 m31_model=None,
                 l = None,
                 b = None,
+                u_t = 1,
+                ds = 770,
                 ):
         """
         Initialize the PBH population
@@ -54,7 +56,10 @@ class Pbh(Lens):
         if f_dm < 0 or f_dm > 1:
             raise ValueError("f_dm must be between 0 and 1")
         self.f_dm = f_dm
-        self.ut_interp = ut_interp
+        # self.ut_interp = ut_interp
+        self.ut_interp = ut_func_new
+        self.u_t = u_t
+        self.ds = ds
     
     def __str__(self) -> str:
         return f"PBH population with mass={self.mass} and f_dm={self.f_dm}"
@@ -73,7 +78,9 @@ class Pbh(Lens):
         return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
 
     def umin_upper_bound(self, d):
-        return self.ut_interp(d, self.mass)[0]
+        # return self.ut_interp(d, self.mass)[0]
+        rho = rho_func(self.mass, d, self.ds)
+        return self.ut_interp(rho, magnification(self.u_t))
     
     def differential_rate_total(self, t, finite=False):
         return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)

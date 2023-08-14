@@ -23,7 +23,7 @@ from fastcore.test import *
 from tqdm import tqdm
 
 
-# %% ../nbs/01_ffp.ipynb 6
+# %% ../nbs/01_ffp.ipynb 5
 class Ffp(Lens):
     """A class to represent a PBH population"""
 
@@ -48,7 +48,7 @@ class Ffp(Lens):
         #     self.ut_interp = ut_interp # assuming source is in m31, 770 kpc away
         # # self.ut_interp = ut_interp_mw
 
-        self.ut_interp = ut_interp_rho
+        self.ut_interp = ut_func_new
 
         self.p = p
         #Define range of power law we want to consider
@@ -169,7 +169,7 @@ class Ffp(Lens):
         else:
             result, error = dblquad(integrand_func,
                                             #Without finite size effects, integral blows up at M31 center
-                                        0, ds*0.99,
+                                        0, self.ds*0.99,
                                         lambda d: 0, 
                                         lambda d: self.u_t,
                                         args=(m, t),
@@ -210,7 +210,7 @@ class Ffp(Lens):
         if self.ut_interp is None:
             self.make_ut_interp()
         rho = rho_func(m, d, self.ds)
-        return self.ut_interp(rho)
+        return self.ut_interp(rho, magnification(self.u_t))
         # return self.ut_interp(d, m)[0]
     
     def differential_rate_total(self, t, finite=False):
