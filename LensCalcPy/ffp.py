@@ -23,7 +23,7 @@ from fastcore.test import *
 from tqdm import tqdm
 
 
-# %% ../nbs/01_ffp.ipynb 5
+# %% ../nbs/01_ffp.ipynb 6
 class Ffp(Lens):
     """A class to represent a PBH population"""
 

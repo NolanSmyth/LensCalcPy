@@ -29,7 +29,7 @@ class Survey:
                  cadence: float, # Cadence in hours
                  survey_area: float, # Survey area in deg^2
                  n_sources: int, # Number of sources observed in survey
-                 efficiency: float = 1, # Efficiency of survey
+                 efficiency: lambda x: 1, # Efficiency of survey
                  use_mw_source: bool = False, # Use Milky Way as source
                  mw_model: MilkyWayModel = None,
                  m31_model: M31Model = None, 
@@ -44,7 +44,7 @@ class Survey:
         self.pbh = None # PBH population
         self.ffp = None # FFP population
         self.n_sources = n_sources # Number of sources observed in the Milky Way
-        self.efficiency = efficiency
+        self.efficiency = efficiency #! want to be a function of t
         self.use_mw_source = use_mw_source
         self.mw_model = mw_model or MilkyWayModel(mw_parameters)
         self.m31_model = m31_model or M31Model(m31_parameters)
