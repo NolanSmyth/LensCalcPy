@@ -31,7 +31,6 @@ class Ffp(Lens):
                 p: float = 1, # Mass function power law index
                 m_min: float = 1e-15, # Minimum mass in Msun
                 m_max: float = 1e-3, # Maximum mass in Msun
-                use_mw_source: bool = False,
                 mw_model: MilkyWayModel = None,
                 m31_model: M31Model = None, 
                 l = None, # Galactic longitude
@@ -42,11 +41,6 @@ class Ffp(Lens):
         """
         Initialize the PBH population
         """
-        # if use_mw_source:
-        #     self.ut_interp = ut_interp_mw #assuming source is 8.5 kpc away
-        # else:
-        #     self.ut_interp = ut_interp # assuming source is in m31, 770 kpc away
-        # # self.ut_interp = ut_interp_mw
 
         self.ut_interp = ut_func_new
 
@@ -136,8 +130,8 @@ class Ffp(Lens):
                                             lambda d: self.umin_upper_bound(d, 10**mf),
                                             # args=(mf, t),
                                             args=(10**mf, t),
-                                            # epsabs=0,
-                                            # epsrel=1e-2,
+                                            epsabs=0,
+                                            epsrel=1e-1,
                                             )
             else:
                 single_result, error = dblquad(integrand_func,
@@ -158,6 +152,8 @@ class Ffp(Lens):
         return result
     
     def differential_rate_monochromatic(self, t, integrand_func, finite=False, m=1e-10):
+
+        # todo rescale the integration distance to be x = dl/ds instead of d
     
         if finite:
             result, error = dblquad(integrand_func, 
@@ -165,7 +161,10 @@ class Ffp(Lens):
                                         lambda d: 0, 
                                         lambda d: self.umin_upper_bound(d, m),
                                         args=(m, t),
+                                        epsabs=0,
+                                        epsrel=1e-1,
                                         )
+        
         else:
             result, error = dblquad(integrand_func,
                                             #Without finite size effects, integral blows up at M31 center

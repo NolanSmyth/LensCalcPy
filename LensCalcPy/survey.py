@@ -69,7 +69,7 @@ class Survey:
                 p: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(p, use_mw_source=self.use_mw_source, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
+        self.ffp = Ffp(p, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,

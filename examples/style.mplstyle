@@ -10,10 +10,10 @@ ytick.right: true
 xtick.direction: in 
 ytick.direction: in
 axes.titlesize: 18
-axes.labelsize: 14
-xtick.labelsize: 13
-ytick.labelsize: 13
-legend.fontsize: 11
+axes.labelsize: 24
+xtick.labelsize: 18
+ytick.labelsize: 18
+legend.fontsize: 14
 font.size: 13
 figure.figsize: 8, 6
 legend.frameon: false

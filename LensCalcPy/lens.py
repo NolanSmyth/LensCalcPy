@@ -50,7 +50,7 @@ class Lens(ABC):
     
     def differential_rate(self, t, integrand_func, finite=False):
         if finite:
-            result, error = dblquad(integrand_func, 0, self.ds, self.umin_lower_bound, self.umin_upper_bound, args=[t])
+            result, error = dblquad(integrand_func, 0, self.ds, self.umin_lower_bound, self.umin_upper_bound, args=[t], epsabs=0, epsrel=1e-1)
             return result    
         else:
             umin_bounds = [0, self.u_t]
