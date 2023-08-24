@@ -33,6 +33,7 @@ class Survey:
                  use_mw_source: bool = False, # Use Milky Way as source
                  mw_model: MilkyWayModel = None,
                  m31_model: M31Model = None, 
+                 A_t: float = 1.34, # Threshold magnification for detection
                  ):
      
         self.l = l 
@@ -48,6 +49,8 @@ class Survey:
         self.use_mw_source = use_mw_source
         self.mw_model = mw_model or MilkyWayModel(mw_parameters)
         self.m31_model = m31_model or M31Model(m31_parameters)
+        self.A_t = A_t
+        self.u_t = u_t_point(self.A_t) #threshold impact parameter
 
     def __str__(self) -> str:
         return f"Survey(l={self.l}, b={self.b}, source_dist={self.source_dist}, obs_time={self.obs_time}, cadence = {self.cadence}, survey_area={self.survey_area}, n_sources={self.n_sources}, efficiency={self.efficiency})"
@@ -59,14 +62,14 @@ class Survey:
                 f_dm: float = 1, # fraction of DM in PBHs
                 ):
         """adds a PBH population to the survey"""
-        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b)
+        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
         return
     
     def add_ffp(self,
                 p: float, # power law index of FFP mass function
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(p, use_mw_source=self.use_mw_source, l=self.l, b=self.b)
+        self.ffp = Ffp(p, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,

@@ -17,9 +17,11 @@ from abc import ABC, abstractmethod
 class Lens(ABC):
     """Abstract class for lens objects.
     """
-    def __init__(self, mass):
+    def __init__(self, mass, u_t = 1, ds=770):
         self.ut_interp = ut_interp
         self.mass = mass
+        self.u_t = u_t
+        self.ds = ds
         pass
 
     def __str__(self):
@@ -35,7 +37,7 @@ class Lens(ABC):
 
     def differential_rate_integrand(self, umin, d, t, dist_func, density_func, v_disp_func, finite=False, density_func_uses_d=False):
         r = dist_func(d)
-        ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else 1
+        ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else self.u_t
         if ut <= umin:
             return 0
         v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut)
@@ -48,11 +50,11 @@ class Lens(ABC):
     
     def differential_rate(self, t, integrand_func, finite=False):
         if finite:
-            result, error = dblquad(integrand_func, 0, ds, self.umin_lower_bound, self.umin_upper_bound, args=[t])
+            result, error = dblquad(integrand_func, 0, self.ds, self.umin_lower_bound, self.umin_upper_bound, args=[t], epsabs=0, epsrel=1e-1)
             return result    
         else:
-            umin_bounds = [0, ut]
-            d_bounds = [0, ds]
+            umin_bounds = [0, self.u_t]
+            d_bounds = [0, self.ds]
             result, error = nquad(integrand_func, [umin_bounds, d_bounds], args=[t])
             return result
 
