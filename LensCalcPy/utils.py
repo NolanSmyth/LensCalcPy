@@ -124,7 +124,7 @@ def scientific_format(x, pos):
     b = int(b)
     return r'${} \times 10^{{{}}}$'.format(a, b)
 
-# %% ../nbs/04_utils.ipynb 9
+# %% ../nbs/04_utils.ipynb 8
 # Add finite size calculation following https://arxiv.org/pdf/1905.06066.pdf
 
 # Compute 'w' parameter given the mass of the primordial black hole and the wavelength
@@ -239,7 +239,7 @@ def make_ut_interp(n_points=40, ds = 770, A_thresh=1.34):
     ut_interp = interp2d(d_arr, m_arr, ut_values)
     return ut_interp
 
-# %% ../nbs/04_utils.ipynb 24
+# %% ../nbs/04_utils.ipynb 13
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
@@ -255,7 +255,7 @@ A_threshs = np.linspace(A_thresh_min, A_thresh_max, 20)
 # with open('../LensCalcPy/interpolations/ut_interp_rho.pkl', 'wb') as f:
 #     pickle.dump(ut_interp_rho, f)
 
-# %% ../nbs/04_utils.ipynb 26
+# %% ../nbs/04_utils.ipynb 15
 def ut_func_new(rho, A_thresh):
     # rho = np.asarray(rho) 
     rho = np.atleast_1d(rho) # Ensure rho is at least 1-dimensional

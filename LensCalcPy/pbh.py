@@ -136,8 +136,12 @@ class Pbh(Lens):
         return self.rate_total(self.differential_rate_integrand_mw, finite=finite)
     
     def rate_m31(self, finite=False):
-        return self.rate_total(self.differential_rate_integrand_m31, finite=finite)
-    
+        result = self.rate_total(self.differential_rate_integrand_m31, finite=finite)
+        if not np.isnan(result):
+            return result
+        else:
+            return 0
+        
     def rate_tot(self, finite=False):
         return self.rate_mw(finite=finite) + self.rate_m31(finite=finite)
 

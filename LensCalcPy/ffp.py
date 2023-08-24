@@ -52,8 +52,7 @@ class Ffp(Lens):
         self.m_min = m_min
         self.m_max = m_max
         self.M_norm = 1 #solar mass
-        # self.Z = self.pl_norm(self.p)
-        self.Z = self.pl_norm_new()
+        self.Z = self.pl_norm()
         self.Zprime = self.dN_dM_norm()
 
         # Instantiate or use existing MilkyWayModel and M31Model
@@ -93,34 +92,28 @@ class Ffp(Lens):
     def dN_dlogM_wrapper(self, M):
         return self.dN_dlogM(1, M, self.M_norm, self.p)
     
-    def pl_norm_new(self):
+    def pl_norm(self):
         return 1/abs(nquad(self.dN_dlogM_wrapper,[[np.log10(self.m_min), np.log10(self.m_max)]], opts={'points': [np.log10(self.m_min), np.log10(self.m_min*1e3), np.log10(self.m_max*1e3)]})[0])
 
     def mass_func(self, log10m):
         #M_norm = 1 solar mass for now. This is dN/dlogM
         m = 10**log10m
         return self.Z * (m/1)**-self.p
-    
-    def pl_norm(self, p):
-        N_ffp = 1 # Number of FFPs per star
-        return N_ffp/abs(nquad(self.mass_func,[[self.m_min, self.m_max]], opts={'points': [self.m_min, self.m_min*1e3]})[0])
 
-    # def differential_rate_integrand(self, umin, d, mf, t, dist_func, density_func, v_disp_func, finite=False):
-    def differential_rate_integrand(self, umin, d, t, mf, dist_func, density_func, v_disp_func, finite=False):
-        r = dist_func(d, self.l, self.b)
-        # ut = self.umin_upper_bound(d, mf) if (self.ut_interp and finite) else self.u_t
+    def differential_rate_integrand(self, umin, d, t, mf, model, finite=False, v_disp=None):
+        r = model.dist_center(d, self.l, self.b)
         ut = self.umin_upper_bound(d, mf) if finite else self.u_t
         if ut <= umin:
             return 0
-        v_rad = velocity_radial(d, mf, umin, t * htosec, ut)  
-        v_disp = v_disp_func(r)
+        v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+        if v_disp is None: 
+            v_disp = model.velocity_dispersion_stars(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                         #For FFP number density, use stellar density for 1 solar mass stars
-                density_func(d) / (1 * v_disp**2) *  
+                model.density_stars(d) / (1 * v_disp**2) *  
                 v_rad**4 * (htosec / kpctokm)**2 *
                 np.exp(-(v_rad**2 / v_disp**2)) *
                 1)
-
 
     def differential_rate(self, t, integrand_func, finite=False):
         #rewrite using tplquad?
@@ -142,85 +135,41 @@ class Ffp(Lens):
                                             0, self.d_upper_bound(10**mf),
                                             lambda d: 0, 
                                             lambda d: self.umin_upper_bound(d, 10**mf),
-                                            # args=(mf, t),
                                             args=(10**mf, t),
-                                            # epsabs=0,
-                                            # epsrel=1e-1,
                                             )
             else:
                 single_result, error = dblquad(integrand_func,
                                                #Without finite size effects, integral blows up at M31 center
-                                            0, 10,
+                                            0, self.ds,
                                             lambda d: 0, 
                                             lambda d: self.u_t,
                                             args=(10**mf, t),
-                                            # epsabs=0,
-                                            # epsrel=1e-2,
                                             )
-            # if single_result != 0 and error/abs(single_result) >=1:
-                # print("Warning: error in differential rate integration is large: {}".format(error/abs(single_result)))
             
             result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
 
         result *= self.Z  # normalization
         return result
-
     
-    def differential_rate_monochromatic(self, t, integrand_func, finite=False, m=1e-10):
-        if finite:
-            result, error = dblquad(integrand_func, 
-                                        0, self.d_upper_bound(m), 
-                                        lambda d: 0, 
-                                        lambda d: self.umin_upper_bound(d, m),
-                                        # args=(m, t),
-                                        args=(m, t, {'points':[0, self.ds]}),
-                                        epsabs=0,
-                                        epsrel=1e-1,
-                                        )
-            
-        else:
-            result, error = dblquad(integrand_func,
-                                            #Without finite size effects, integral blows up at M31 center
-                                        0, self.ds*0.99,
-                                        lambda d: 0, 
-                                        lambda d: self.u_t,
-                                        args=(m, t),
-                                        )
-        return result
-
-        
-    def differential_rate_integrand_mw(self, umin, d, mf, t, finite=True, vel_func=None):
-        if vel_func is None:
-            vel_func = self.mw_model.velocity_dispersion_stars
-        return self.differential_rate_integrand(umin, d, t, mf, self.mw_model.dist_center, self.mw_model.density_stars, vel_func, finite=finite)
-
     def differential_rate_mw(self, t, finite=True, v_disp=None):
-        if v_disp:
-            vel_func = lambda r: v_disp
-            f = functools.partial(self.differential_rate_integrand_mw, vel_func=vel_func, finite=finite)
-            return self.differential_rate(t, f, finite=finite)
-        # return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
-        f = functools.partial(self.differential_rate_integrand_mw, finite=finite)
-        return self.differential_rate(t, f, finite=finite)
+        def integrand_func(umin, d, mf, t):
+            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp)
+        return self.differential_rate(t, integrand_func, finite=finite)
 
-    def differential_rate_mw_monochromatic(self, t, finite=False, m=1e-10):
-        return self.differential_rate_monochromatic(t, self.differential_rate_integrand_mw, finite=finite, m=m)
+    def differential_rate_m31(self, t, finite=True, v_disp=None):
+        def integrand_func(umin, d, mf, t):
+            return self.differential_rate_integrand(umin, d, t, mf, self.m31_model, finite=finite, v_disp=v_disp)
+        return self.differential_rate(t, integrand_func, finite=finite)
 
-    def differential_rate_integrand_m31(self, umin, d, mf, t, finite=True, vel_func=None):
-        if vel_func is None:
-            vel_func = self.m31_model.velocity_dispersion_stars
-        return self.differential_rate_integrand(umin, d, t, mf, self.m31_model.dist_center, self.m31_model.density_stars, vel_func, finite=finite)
-
-    def differential_rate_m31(self, t, finite=False, v_disp=None):
-        if v_disp:
-            vel_func = lambda r: v_disp
-            f = functools.partial(self.differential_rate_integrand_m31, vel_func=vel_func, finite=finite)
-            return self.differential_rate(t, f, finite=finite)
-        f = functools.partial(self.differential_rate_integrand_m31, finite=finite)
-        return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
-
-    def differential_rate_m31_monochromatic(self, t, finite=False, m=1e-10):
-        return self.differential_rate_monochromatic(t, self.differential_rate_integrand_m31, finite=finite, m=m)
+    def differential_rate_mw_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
+        def integrand_func(umin, d, t, mf):
+            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite)
+        return self.differential_rate_mass(m, integrand_func, finite=finite, tcad=tcad, tobs=tobs, epsabs = epsabs, epsrel = epsrel, efficiency=efficiency, monochromatic=monochromatic)
+    
+    def differential_rate_m31_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
+        def integrand_func(umin, d, t, mf):
+            return self.differential_rate_integrand(umin, d, t, mf, self.m31_model, finite=finite)
+        return self.differential_rate_mass(m, integrand_func, finite=finite, tcad=tcad, tobs=tobs, epsabs = epsabs, epsrel = epsrel, efficiency=efficiency, monochromatic=monochromatic)
 
     def umin_upper_bound(self, d, m):
         rho = rho_func(m, d, self.ds)
@@ -247,18 +196,8 @@ class Ffp(Lens):
  
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
-
-    def differential_rate_integrand_mw_mass(self, umin, d, t, mf, finite=True, vel_func=None):
-        if vel_func is None:
-            vel_func = self.mw_model.velocity_dispersion_stars     
-        return self.differential_rate_integrand(umin, d, t, mf, self.mw_model.dist_center, self.mw_model.density_stars, vel_func, finite=finite)
     
-    def differential_rate_integrand_m31_mass(self, umin, d, t, mf, finite=True, vel_func=None):
-        if vel_func is None:
-            vel_func = self.m31_model.velocity_dispersion_stars
-        return self.differential_rate_integrand(umin, d, t, mf, self.m31_model.dist_center, self.m31_model.density_stars, vel_func, finite=finite)
-    
-    def differential_rate_mass(self, m, integrand_func, finite=True, tcad=0.07, tobs=3, d_lower = 0, d_upper=np.inf, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):        
+    def differential_rate_mass(self, m, integrand_func, finite=True, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):        
         
         if efficiency is None:
             def efficiency(t):
@@ -277,38 +216,15 @@ class Ffp(Lens):
         bounds_t = [tcad, tobs]
 
         if finite:
-            bounds_d = [d_lower, min(self.d_upper_bound(m), d_upper)]
+            bounds_d = [0, self.d_upper_bound(m)]
         else:
-            bounds_d = [d_lower, min(self.ds, d_upper)]
+            bounds_d = [0, self.ds]
 
         opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, self.ds]}
 
         result, error = nquad(integrand, [bounds_t, bounds_d], args=(m, finite), opts=opts)
 
-        # if result > 0 and error/result > 0.1: #redo with higher precision 
-        #     print('Error greater than 10%, recalculating integral with higher precision')
-        #     opts = {"epsabs": 0, "epsrel": 1e-1, "points":[point, self.ds]}
-        #     result, error = nquad(integrand, [bounds_t, bounds_d], args=(m, finite), opts=opts)
-
         if monochromatic:
             return result
         return result*self.f_m(m)
-
-
-    
-    def differential_rate_mw_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, d_lower=0, d_upper=np.inf, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
-        if v_disp:
-            vel_func = lambda r: v_disp
-            f = functools.partial(self.differential_rate_integrand_mw_mass, vel_func=vel_func, finite=finite)
-        else:
-            f = functools.partial(self.differential_rate_integrand_mw_mass, finite=finite)
-        return self.differential_rate_mass(m, f, finite=finite, tcad=tcad, tobs=tobs, d_lower=d_lower, d_upper=d_upper, epsabs = epsabs, epsrel = epsrel, efficiency=efficiency, monochromatic=monochromatic)
-    
-    def differential_rate_m31_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, d_lower=0, d_upper=np.inf, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
-        if v_disp:
-            vel_func = lambda r: v_disp
-            f = functools.partial(self.differential_rate_integrand_m31_mass, vel_func=vel_func, finite=finite)
-        else:
-            f = functools.partial(self.differential_rate_integrand_m31_mass, finite=finite)
-        return self.differential_rate_mass(m, f, finite=finite, tcad=tcad, tobs=tobs, d_lower = self.ds*0.5, d_upper=d_upper, epsabs = epsabs, epsrel = epsrel, efficiency=efficiency, monochromatic=monochromatic)
 
