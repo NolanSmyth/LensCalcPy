@@ -1,0 +1,13 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 00_pbh.ipynb
+      - 01_ffp.ipynb
+      - 02_mw.ipynb
+      - 03_survey.ipynb
+      - 04_utils.ipynb
+      - 05_parameters.ipynb
+      - 06_stats.ipynb
+      - 07_lens.ipynb
+      - 08_galaxy.ipynb
