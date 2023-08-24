@@ -134,9 +134,10 @@ def w_func(m_pbh, lam):
 # Compute 'rho' parameter given the mass of the primordial black hole and the lens distance
 def rho_func(m_pbh, dl, ds):
     if dl >= ds:
-        raise ValueError("dl must be less than ds to prevent division by zero.")
+        # raise ValueError("dl must be less than ds to prevent division by zero.")
+        return np.inf
     if dl == 0:
-        return 1e-2
+        dl = 1e-2
     x = dl / ds
     # return 5.9 * (m_pbh / 1e-10)**(-1/2) * (x / (1-x))**(1/2) 
     return 5.9 * (m_pbh / 1e-10)**(-1/2) * (x / (1-x))**(1/2) * (ds/770)**(-1/2)
@@ -238,7 +239,7 @@ def make_ut_interp(n_points=40, ds = 770, A_thresh=1.34):
     ut_interp = interp2d(d_arr, m_arr, ut_values)
     return ut_interp
 
-# %% ../nbs/04_utils.ipynb 21
+# %% ../nbs/04_utils.ipynb 24
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
@@ -254,7 +255,7 @@ A_threshs = np.linspace(A_thresh_min, A_thresh_max, 20)
 # with open('../LensCalcPy/interpolations/ut_interp_rho.pkl', 'wb') as f:
 #     pickle.dump(ut_interp_rho, f)
 
-# %% ../nbs/04_utils.ipynb 23
+# %% ../nbs/04_utils.ipynb 26
 def ut_func_new(rho, A_thresh):
     # rho = np.asarray(rho) 
     rho = np.atleast_1d(rho) # Ensure rho is at least 1-dimensional

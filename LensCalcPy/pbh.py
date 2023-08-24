@@ -12,6 +12,8 @@ from .galaxy import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import nquad, dblquad
+from scipy.optimize import minimize_scalar
+
 from scipy.interpolate import interp1d, interp2d
 from tqdm import tqdm
 # from multiprocessing import Pool
@@ -70,6 +72,74 @@ class Pbh(Lens):
     
     def differential_rate_integrand_m31(self, umin, d, t, finite=False):
         return self.differential_rate_integrand(umin, d, t, dist_m31, density_m31, velocity_dispersion_m31, finite=finite)
+    
+    def differential_rate(self, t, integrand_func, finite=False):
+        if finite:
+            result, error = dblquad(integrand_func, 
+                                    0, self.d_upper_bound(),
+                                    lambda d: 0, 
+                                    lambda d: self.umin_upper_bound(d),
+                                    args=[t],
+                                    epsabs=0,
+                                    epsrel=1e-1,
+                                    )
+        else:
+            result, error = dblquad(integrand_func,
+                                        #Without finite size effects, integral blows up at M31 center
+                                    0, self.ds*0.99,
+                                    lambda d: 0, 
+                                    lambda d: self.u_t,
+                                    args=[t],
+                                    epsabs=0,
+                                    epsrel=1e-1,
+                                    )
+        return result
+
+    def rate_total(self, integrand_func, finite=True, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None):        
+        
+        if efficiency is None:
+            def efficiency(t):
+                return 1
+            
+        point = self.sticking_point()
+
+        def integrand(t, d, finite):
+            if finite:
+                u_bounds = [0, self.umin_upper_bound(d)]
+            else:
+                u_bounds = [0, self.u_t]
+            u_result, _ = nquad(integrand_func, [u_bounds], args=(d, t))
+            return u_result * efficiency(t)
+
+        bounds_t = [tcad, tobs]
+
+        if finite:
+            bounds_d = [0, min(self.d_upper_bound(), self.ds)]
+        else:
+            bounds_d = [0, self.ds]
+
+        opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, self.ds]}
+
+        result, error = nquad(integrand, [bounds_t, bounds_d], args=[finite], opts=opts)
+        return result
+    
+            
+    def d_upper_bound(self):
+        #Determine upper limit for d otherwise for low masses, the contribution which only comes from d << 1 gets missed
+        d_arr = np.logspace(-3, np.log10(self.ds*0.99), 100)
+        for d in d_arr:
+            if self.umin_upper_bound(d) == 0:
+                return d
+        return self.ds
+    
+    def rate_mw(self, finite=False):
+        return self.rate_total(self.differential_rate_integrand_mw, finite=finite)
+    
+    def rate_m31(self, finite=False):
+        return self.rate_total(self.differential_rate_integrand_m31, finite=finite)
+    
+    def rate_tot(self, finite=False):
+        return self.rate_mw(finite=finite) + self.rate_m31(finite=finite)
 
     def differential_rate_mw(self, t, finite=False):
         return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
@@ -87,3 +157,11 @@ class Pbh(Lens):
  
     def compute_differential_rate(self, ts, finite=False):
         return [self.differential_rate_total(t, finite=finite) for t in ts]
+    
+    def sticking_point(self):
+        #Determine where u_t is maximized. This speeds up the integral in m31
+        result = minimize_scalar(lambda d: -self.umin_upper_bound(d), bounds=(0, self.ds), method='bounded')
+        if result.success:
+            return result.x[0] if isinstance(result.x, (list, np.ndarray)) else result.x
+        else:
+            return self.ds
