@@ -24,7 +24,12 @@ parameters of their survey (Line of sight, cadence, observation
 duration) and compute observables such as the distribution of crossing
 times $t_E$, total expected events, etc.
 
-For specific examples, see the notebooks in the
+The full documentation can be found
+[here](http://nolan-smyth.com/LensCalcPy/). The source code, located in
+[nbs](https://github.com/NolanSmyth/LensCalcPy/tree/main/nbs), is
+intended to be easily interacrtable and modularizable, so adding
+functionality is straightforward. For real-world examples, see the
+notebooks in the
 [examples](https://github.com/NolanSmyth/LensCalcPy/tree/main/examples)
 folder. Below are some minimal examples for PBH (Primordial Black Hole)
 lenses and UBO (Unbound Objects) lenses. Here, the line of sight is
