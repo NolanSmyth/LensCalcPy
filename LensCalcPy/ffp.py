@@ -110,7 +110,7 @@ class Ffp(Lens):
             v_disp = model.velocity_dispersion_stars(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                         #For FFP number density, use stellar density for 1 solar mass stars
-                model.density_stars(d) / (1 * v_disp**2) *  
+                model.density_stars(d, self.l, self.b) / (1 * v_disp**2) *  
                 v_rad**4 * (htosec / kpctokm)**2 *
                 np.exp(-(v_rad**2 / v_disp**2)) *
                 1)

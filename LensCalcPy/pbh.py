@@ -52,8 +52,6 @@ class Pbh(Lens):
         self.l = l
         self.b = b
 
-        if mass < m_low_interp or mass > m_high_interp:
-            raise ValueError("PBH mass must be between 1e-16 and 1e-4 or a different interpolation function must be used for u_t")
         self.mass = mass
         if f_dm < 0 or f_dm > 1:
             raise ValueError("f_dm must be between 0 and 1")
@@ -67,11 +65,25 @@ class Pbh(Lens):
         return f"PBH population with mass={self.mass} and f_dm={self.f_dm}"
     __repr__ = __str__
 
+    def differential_rate_integrand(self, umin, d, t, model, finite=False, v_disp=None):
+        r = model.dist_center(d, self.l, self.b)
+        ut = self.umin_upper_bound(d) if finite else self.u_t
+        if ut <= umin:
+            return 0
+        v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut) 
+        if v_disp is None: 
+            v_disp = model.velocity_dispersion_dm(r)
+        return 2 * (1 / (ut**2 - umin**2)**0.5 *
+                model.density_dm(d, self.l, self.b) / (self.mass * v_disp**2) *  
+                v_rad**4 * (htosec / kpctokm)**2 *
+                np.exp(-(v_rad**2 / v_disp**2)) *
+                1)
+
     def differential_rate_integrand_mw(self, umin, d, t, finite=False):
-        return self.differential_rate_integrand(umin, d, t, dist_mw, density_mw, velocity_dispersion_mw, finite=finite)
+        return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite)
     
     def differential_rate_integrand_m31(self, umin, d, t, finite=False):
-        return self.differential_rate_integrand(umin, d, t, dist_m31, density_m31, velocity_dispersion_m31, finite=finite)
+        return self.differential_rate_integrand(umin, d, t, self.m31_model, finite=finite)
     
     def differential_rate(self, t, integrand_func, finite=False):
         if finite:
@@ -145,18 +157,28 @@ class Pbh(Lens):
     def rate_tot(self, finite=False):
         return self.rate_mw(finite=finite) + self.rate_m31(finite=finite)
 
-    def differential_rate_mw(self, t, finite=False):
-        return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
+    # def differential_rate_mw(self, t, finite=False):
+    #     return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
+    
+    def differential_rate_mw(self, t, finite=True, v_disp=None):
+        def integrand_func(umin, d, t):
+            return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite, v_disp=v_disp)
+        return self.differential_rate(t, integrand_func, finite=finite)
 
-    def differential_rate_m31(self, t, finite=False):
-        return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
+    # def differential_rate_m31(self, t, finite=False):
+    #     return self.differential_rate(t, self.differential_rate_integrand_m31, finite=finite)
+    
+    def differential_rate_m31(self, t, finite=True, v_disp=None):
+        def integrand_func(umin, d, t):
+            return self.differential_rate_integrand(umin, d, t, self.m31_model, finite=finite, v_disp=v_disp)
+        return self.differential_rate(t, integrand_func, finite=finite)
 
     def umin_upper_bound(self, d):
         # return self.ut_interp(d, self.mass)[0]
         rho = rho_func(self.mass, d, self.ds)
         return self.ut_interp(rho, magnification(self.u_t))
     
-    def differential_rate_total(self, t, finite=False):
+    def differential_rate_total(self, t, finite=True):
         return self.differential_rate_mw(t, finite=finite) + self.differential_rate_m31(t, finite=finite)
  
     def compute_differential_rate(self, ts, finite=False):

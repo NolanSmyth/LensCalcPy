@@ -243,17 +243,15 @@ def make_ut_interp(n_points=40, ds = 770, A_thresh=1.34):
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
-rho_max = 4.5
-rhos = np.linspace(rho_min, rho_max, 40)
+# rho_max = 4.5
+rho_max = 10.1
+
+rhos = np.linspace(rho_min, rho_max, 100)
 
 A_thresh_min = 1.01
 A_thresh_max = 1.34
 A_threshs = np.linspace(A_thresh_min, A_thresh_max, 20)
 
-# u_ts_new = [u_t_finite_new(rho) for rho in rhos]
-# ut_interp_rho = interp1d(rhos, u_ts_new)
-# with open('../LensCalcPy/interpolations/ut_interp_rho.pkl', 'wb') as f:
-#     pickle.dump(ut_interp_rho, f)
 
 # %% ../nbs/04_utils.ipynb 15
 def ut_func_new(rho, A_thresh):
