@@ -65,12 +65,15 @@ class Pbh(Lens):
         return f"PBH population with mass={self.mass} and f_dm={self.f_dm}"
     __repr__ = __str__
 
-    def differential_rate_integrand(self, umin, d, t, model, finite=False, v_disp=None):
+    def differential_rate_integrand(self, umin, d, t, model, finite=False, v_disp=None, t_e = False):
         r = model.dist_center(d, self.l, self.b)
         ut = self.umin_upper_bound(d) if finite else self.u_t
         if ut <= umin:
             return 0
+        #! There is a relative factor of 2 u_t difference between t_e and t_fwhm for radial velocity!
         v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut) 
+        if t_e:
+            v_rad = v_rad / 2
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
@@ -144,8 +147,8 @@ class Pbh(Lens):
                 return d
         return self.ds
     
-    def rate_mw(self, finite=False):
-        return self.rate_total(self.differential_rate_integrand_mw, finite=finite)
+    def rate_mw(self, finite=False, tcad = 0.07, tobs = 3):
+        return self.rate_total(self.differential_rate_integrand_mw, finite=finite, tcad=tcad, tobs=tobs)
     
     def rate_m31(self, finite=False):
         result = self.rate_total(self.differential_rate_integrand_m31, finite=finite)
@@ -160,9 +163,9 @@ class Pbh(Lens):
     # def differential_rate_mw(self, t, finite=False):
     #     return self.differential_rate(t, self.differential_rate_integrand_mw, finite=finite)
     
-    def differential_rate_mw(self, t, finite=True, v_disp=None):
+    def differential_rate_mw(self, t, finite=True, v_disp=None, t_e=False):
         def integrand_func(umin, d, t):
-            return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite, v_disp=v_disp)
+            return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e)
         return self.differential_rate(t, integrand_func, finite=finite)
 
     # def differential_rate_m31(self, t, finite=False):

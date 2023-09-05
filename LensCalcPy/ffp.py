@@ -100,12 +100,14 @@ class Ffp(Lens):
         m = 10**log10m
         return self.Z * (m/1)**-self.p
 
-    def differential_rate_integrand(self, umin, d, t, mf, model, finite=False, v_disp=None):
+    def differential_rate_integrand(self, umin, d, t, mf, model, finite=False, v_disp=None, t_e=False):
         r = model.dist_center(d, self.l, self.b)
         ut = self.umin_upper_bound(d, mf) if finite else self.u_t
         if ut <= umin:
             return 0
         v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+        if t_e:
+            v_rad = v_rad/2
         if v_disp is None: 
             v_disp = model.velocity_dispersion_stars(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
@@ -151,9 +153,9 @@ class Ffp(Lens):
         result *= self.Z  # normalization
         return result
     
-    def differential_rate_mw(self, t, finite=True, v_disp=None):
+    def differential_rate_mw(self, t, finite=True, v_disp=None, t_e=False):
         def integrand_func(umin, d, mf, t):
-            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp)
+            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp, t_e=t_e)
         return self.differential_rate(t, integrand_func, finite=finite)
 
     def differential_rate_m31(self, t, finite=True, v_disp=None):

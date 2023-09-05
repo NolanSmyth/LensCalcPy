@@ -1,6 +1,8 @@
 _docs/
 _proc/
 
+examples/tess_dat
+
 *.bak
 .gitattributes
 .last_checked
