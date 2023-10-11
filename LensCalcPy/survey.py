@@ -60,16 +60,22 @@ class Survey:
     def add_pbh(self, 
                 m_pbh: float = 1, # mass of each PBH in solar masses
                 f_dm: float = 1, # fraction of DM in PBHs
+                lognorm=False,
+                sigma=None,
                 ):
         """adds a PBH population to the survey"""
-        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
+        # self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
+        self.pbh = Pbh(m_pbh, f_dm, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist, lognorm=lognorm, sigma=sigma)
+
         return
     
     def add_ffp(self,
                 p: float, # power law index of FFP mass function
+                m_min: float = 1e-15, # minimum mass of FFPs in solar masses
+                m_max: float = 1e-3, # maximum mass of FFPs in solar masses
                 ):
         """adds a FFP population to the survey"""
-        self.ffp = Ffp(p, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist)
+        self.ffp = Ffp(p, l=self.l, b=self.b, u_t=self.u_t, ds=self.source_dist, m_min=m_min, m_max=m_max)
     
     def get_crossing_times_rates_pbh(self,
                                     t_es: np.ndarray,

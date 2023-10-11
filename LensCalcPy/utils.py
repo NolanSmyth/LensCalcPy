@@ -4,8 +4,8 @@
 __all__ = ['ut_interp', 'ut_interp_mw', 'ut_interp_rho', 'm_low_interp', 'm_high_interp', 'rho_min', 'rho_max', 'rhos',
            'A_thresh_min', 'A_thresh_max', 'A_threshs', 'dist_mw', 'dist_m31', 'density_mw', 'density_m31',
            'mass_enclosed_mw', 'mass_enclosed_m31', 'velocity_dispersion_mw', 'velocity_dispersion_m31', 'dist',
-           'einstein_rad', 'velocity_radial', 'get_primed_coords', 'scientific_format', 'w_func', 'rho_func',
-           'magnification', 'magnification_wave', 'displacement', 'integrand_polar_wave', 'integrand_polar',
+           'einstein_rad', 'velocity_radial', 'event_duration', 'get_primed_coords', 'scientific_format', 'w_func',
+           'rho_func', 'magnification', 'magnification_wave', 'displacement', 'integrand_polar_wave', 'integrand_polar',
            'magnification_finite_wave', 'magnification_finite', 'u_t_finite', 'u_t_point', 'u_t_finite_wave',
            'make_ut_interp', 'ut_func_new']
 
@@ -87,6 +87,18 @@ def velocity_radial(d: float, # distance from the Sun in kpc
                     ut: float, # threshold impact parameter
                     ) -> float: # radial velocity in km/s
     return 2*einstein_rad(d, mass) * (ut**2 - umin**2)**(1/2) / t * kpctokm
+
+def event_duration(d: float, # distance from the Sun in kpc
+                   mass: float, # mass of the lens in Msun
+                   umin: float, # minimum impact parameter
+                   v_rel: float, # transverse velocity in km/s
+                   ut: float, # threshold impact parameter
+                   ds: float, # distance to the source in kpc
+                    ) -> float: # event duration in seconds
+    # return 2*einstein_rad(d, mass)* kpctokm * (ut**2 - umin**2)**(1/2) / v_rel
+    rho = rho_func(mass, d, ds)
+    return 2* (1 - ((umin + rho)/ut)**2)**(1/2) * einstein_rad(d, mass) * kpctokm * (ut + rho) / v_rel 
+     
 
 # from below 16 of https://iopscience.iop.org/article/10.3847/1538-4357/ac07a8/pdf*)
 # alphabar = 27 Degrees xp-axis is aligned with the major axis
@@ -243,10 +255,12 @@ def make_ut_interp(n_points=40, ds = 770, A_thresh=1.34):
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
-# rho_max = 4.5
-rho_max = 10.1
+rho_max = 4.5
+# rho_max = 10.1
 
-rhos = np.linspace(rho_min, rho_max, 100)
+# rhos = np.linspace(rho_min, rho_max, 100)
+rhos = np.linspace(rho_min, rho_max, 40)
+
 
 A_thresh_min = 1.01
 A_thresh_max = 1.34

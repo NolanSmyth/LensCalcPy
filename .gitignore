@@ -2,6 +2,11 @@ _docs/
 _proc/
 
 examples/tess_dat
+examples/popsycle_data
+examples/interps
+examples/bounds
+examples/figures
+examples/draft_figures
 
 *.bak
 .gitattributes
