@@ -11,12 +11,12 @@ from .galaxy import *
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import nquad, dblquad
-from scipy.optimize import minimize_scalar
+from scipy.integrate import nquad, dblquad, tplquad
+from scipy.optimize import minimize_scalar, fsolve, brentq
 from scipy.integrate import quad
 
 
-from scipy.interpolate import interp1d, interp2d
+from scipy.interpolate import interp1d, interp2d, RegularGridInterpolator
 from tqdm import tqdm
 # from multiprocessing import Pool
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 
 from fastcore.test import *
 
-# %% ../nbs/00_pbh.ipynb 5
+# %% ../nbs/00_pbh.ipynb 16
 class Pbh(Lens):
     """A class to represent a PBH population"""
 
@@ -79,8 +79,7 @@ class Pbh(Lens):
             raise ValueError("Lognormal mass function not initialized")
         return 1 / (m * self.sigma * np.sqrt(2 * np.pi)) * np.exp(-(np.log(m/self.mass))**2 / (2 * self.sigma**2))
 
-    def differential_rate_integrand(self, umin, d, t, model, finite=False, v_disp=None, t_e = False, tmax=np.inf, tmin=0):
-    # def differential_rate_integrand(self, umin, d, t, mf, model, finite=False, v_disp=None, t_e = False, tmax=np.inf, tmin=0):
+    def differential_rate_integrand(self, umin, d, t, model, finite=False, v_disp=None, t_e = False, tmax=np.inf, tmin=0, t_fwhm=False):
 
         r = model.dist_center(d, self.l, self.b)
         ut = self.umin_upper_bound(d) if finite else self.u_t
@@ -92,12 +91,23 @@ class Pbh(Lens):
             t_duration = max(ut, self.umin_upper_bound(d)) * 2 * einstein_rad(d, self.mass) * kpctokm / v_rad / htosec #event duration in hours
 
             if t_duration > tmax or t_duration < tmin:
-                return 0     
+                return 0   
+        elif t_fwhm:
+            # if finite:
+            #     t_E = t_E_from_t_fwhm_finite(t, umin, rho_func(self.mass, d, self.ds))
+            # else:
+            #     t_E = t_E_from_t_fwhm(t, umin)
+            t_E = t_e_from_fwhm(t, umin, finite, rho_func(self.mass, d, self.ds), ut)
+            # t_E = t_e_from_fwhm(t, umin, True, rho_func(self.mass, d, self.ds), ut)
+
+            v_rad = einstein_rad(d, self.mass, self.ds) * kpctokm / (t_E * htosec)
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
             v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
+            # v_disp = model.velocity_dispersion_nfw(r)
+
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                 model.density_dm(d, self.l, self.b) / (self.mass * v_disp**2) *  
                 v_rad**4 * (htosec / kpctokm)**2 *
@@ -110,54 +120,100 @@ class Pbh(Lens):
     def differential_rate_integrand_m31(self, umin, d, t, finite=False):
         return self.differential_rate_integrand(umin, d, t, self.m31_model, finite=finite)
     
-    def differential_rate(self, t, integrand_func, finite=False):
-        if finite:
-            result, error = dblquad(integrand_func, 
-                                    0, self.d_upper_bound(),
-                                    lambda d: 0, 
-                                    lambda d: self.umin_upper_bound(d),
-                                    args=[t],
-                                    epsabs=0,
-                                    epsrel=1e-1,
-                                    )
-        else:
-            result, error = dblquad(integrand_func,
-                                        #Without finite size effects, integral blows up at M31 center
-                                    0, self.ds*0.99,
-                                    lambda d: 0, 
-                                    lambda d: self.u_t,
-                                    args=[t],
-                                    epsabs=0,
-                                    epsrel=1e-1,
-                                    )
+    def differential_rate(self, t, integrand_func, finite=False, epsabs=1.49e-08, epsrel=1.49e-08):
+        # if finite:
+        #     result, error = dblquad(integrand_func, 
+        #                             0, self.d_upper_bound(),
+        #                             lambda d: 0, 
+        #                             lambda d: self.umin_upper_bound(d),
+        #                             args=[t],
+        #                             epsabs=0,
+        #                             epsrel=1e-1,
+        #                             )
+        # else:
+        #     result, error = dblquad(integrand_func,
+        #                                 #Without finite size effects, integral blows up at M31 center
+        #                             0, self.ds*0.99,
+        #                             # 0, self.d_upper_bound(),
+        #                             lambda d: 0, 
+        #                             lambda d: self.u_t,
+        #                             args=[t],
+        #                             epsabs=0,
+        #                             epsrel=1e-1,
+        #                             )
+        # return result
+
+        def inner_integrand(u, d, t):
+            return integrand_func(u, d, t)
+        
+        # Second integral (over u) - bounds given by d
+        def second_integral(d, t):
+            if finite:
+                u_min, u_max = 0, self.umin_upper_bound(d)[0]
+            else:
+                u_min, u_max = 0, self.u_t
+
+            result, error = quad(inner_integrand, u_min, u_max, args=(d, t), epsabs=epsabs, epsrel=epsrel)
+
+            return result
+        
+        # Outermost integral (over d)
+        d_min, d_max = 0, self.d_upper_bound() if finite else self.ds
+        result, error = quad(second_integral, d_min, d_max, args=(t,), epsabs=epsabs, epsrel=epsrel)
         return result
 
     def rate_total(self, integrand_func, finite=True, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None):        
         
-        if efficiency is None:
-            def efficiency(t):
-                return 1
+        # if efficiency is None:
+        #     def efficiency(t):
+        #         return 1
             
-        point = self.sticking_point()
+        # point = self.sticking_point()
 
-        def integrand(t, d, finite):
+        # def integrand(t, d, finite):
+        #     if finite:
+        #         u_bounds = [0, self.umin_upper_bound(d)]
+        #     else:
+        #         u_bounds = [0, self.u_t]
+        #     u_result, _ = nquad(integrand_func, [u_bounds], args=(d, t))
+        #     return u_result * efficiency(t)
+
+        # bounds_t = [tcad, tobs]
+
+        # if finite:
+        #     bounds_d = [0, min(self.d_upper_bound(), self.ds)]
+        # else:
+        #     bounds_d = [0, self.ds]
+
+        # opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, self.ds]}
+
+        # result, error = nquad(integrand, [bounds_t, bounds_d], args=[finite], opts=opts)
+        # return result
+
+        # Innermost double integral
+        def inner_integrand(u, d, t):
+            return integrand_func(u, d, t)
+        
+        # Second integral (over u) - bounds given by d
+        def second_integral(d, t):
             if finite:
-                u_bounds = [0, self.umin_upper_bound(d)]
+                u_min, u_max = 0, self.umin_upper_bound(d)[0]
             else:
-                u_bounds = [0, self.u_t]
-            u_result, _ = nquad(integrand_func, [u_bounds], args=(d, t))
-            return u_result * efficiency(t)
+                u_min, u_max = 0, self.u_t
+            
+            result, error = quad(inner_integrand, u_min, u_max, args=(d, t), epsabs=epsabs, epsrel=epsrel)
 
-        bounds_t = [tcad, tobs]
-
-        if finite:
-            bounds_d = [0, min(self.d_upper_bound(), self.ds)]
-        else:
-            bounds_d = [0, self.ds]
-
-        opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, self.ds]}
-
-        result, error = nquad(integrand, [bounds_t, bounds_d], args=[finite], opts=opts)
+            return result
+        
+        # Outermost integral (over d)
+        def outer_integral(t):
+            d_min, d_max = 0, self.d_upper_bound() if finite else self.ds
+            result, error = quad(second_integral, d_min, d_max, args=(t,), epsabs=epsabs, epsrel=epsrel)
+            # return result * self.mass_function(mf) * mf * np.log(10)  # multiply by mass function and by dlogm * m
+            return result  
+        
+        # Integrate over time
+        result, error = quad(outer_integral, tcad, tobs, epsabs=epsabs, epsrel=epsrel)
         return result
     
     
@@ -171,8 +227,10 @@ class Pbh(Lens):
                 return d
         return self.ds
     
-    def rate_mw(self, finite=False, tcad = 0.07, tobs = 3):
-        return self.rate_total(self.differential_rate_integrand_mw, finite=finite, tcad=tcad, tobs=tobs)
+    def rate_mw(self, finite=False, tcad = 0.07, tobs = 3, efficiency=None, epsabs = 1.49e-08, epsrel = 1.49e-08):
+        def integrand_func(umin, d, t):
+            return self.differential_rate_integrand_mw(umin, d, t, finite=finite,)
+        return self.rate_total(integrand_func, finite=finite, tcad=tcad, tobs=tobs, efficiency=efficiency, epsabs=epsabs, epsrel=epsrel)
     
     def rate_m31(self, finite=False):
         result = self.rate_total(self.differential_rate_integrand_m31, finite=finite)
@@ -184,14 +242,14 @@ class Pbh(Lens):
     def rate_tot(self, finite=False):
         return self.rate_mw(finite=finite) + self.rate_m31(finite=finite)
     
-    def differential_rate_mw(self, t, finite=True, v_disp=None, t_e=False, tmax=np.inf, tmin=0):
+    def differential_rate_mw(self, t, finite=True, v_disp=None, t_e=False, tmax=np.inf, tmin=0, t_fwhm=False):
         def integrand_func(umin, d, t):
-            return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e, tmax=tmax, tmin=tmin)
+            return self.differential_rate_integrand(umin, d, t, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e, tmax=tmax, tmin=tmin, t_fwhm=t_fwhm)
         return self.differential_rate(t, integrand_func, finite=finite)
     
-    def differential_rate_m31(self, t, finite=True, v_disp=None):
+    def differential_rate_m31(self, t, finite=True, v_disp=None, t_fwhm=False):
         def integrand_func(umin, d, t):
-            return self.differential_rate_integrand(umin, d, t, self.m31_model, finite=finite, v_disp=v_disp)
+            return self.differential_rate_integrand(umin, d, t, self.m31_model, finite=finite, v_disp=v_disp, t_fwhm=t_fwhm)
         return self.differential_rate(t, integrand_func, finite=finite)
 
     def umin_upper_bound(self, d, m=None):
@@ -213,46 +271,6 @@ class Pbh(Lens):
             return result.x[0] if isinstance(result.x, (list, np.ndarray)) else result.x
         else:
             return self.ds
-        
-    def differential_rate_lognorm(self, t, integrand_func, finite=False, epsabs = 1.49e-08, epsrel = 1.49e-08):
-        #rewrite using tplquad?
-        num = 20  # number of discretization points, empirically, result levels off for >~ 40
-        mf_values = np.linspace(np.log10(self.mass)-2, np.log10(self.mass)+2, num=num)
-
-        result = 0
-        for i in range(num):
-            mf = mf_values[i]
-            if i == 0:  # for the first point
-                dm = mf_values[i+1] - mf_values[i]
-            elif i < num - 1:  # for middle points
-                dm = ((mf_values[i+1] - mf_values[i]) + (mf_values[i] - mf_values[i-1])) / 2
-            else:  # for the last point
-                dm = mf_values[i] - mf_values[i-1]
-
-            if finite:
-                single_result, error = dblquad(integrand_func, 
-                                            # 0, 10, 
-                                            0, self.d_upper_bound(10**mf),
-                                            lambda d: 0, 
-                                            lambda d: self.umin_upper_bound(d, 10**mf),
-                                            args=(10**mf, t),
-                                            epsabs=epsabs,
-                                            epsrel=epsrel,
-                                            )
-            else:
-                single_result, error = dblquad(integrand_func,
-                                               #Without finite size effects, integral blows up at M31 center
-                                            0, self.ds,
-                                            lambda d: 0, 
-                                            lambda d: self.u_t,
-                                            args=(10**mf, t),
-                                            epsabs=epsabs,
-                                            epsrel=epsrel,
-                                            )
-            
-            # result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
-            result += single_result * self.mass_function(10**mf) * dm * 10**mf # multiply by mass function and by dlogm * m. 
-        return result
     
     def differential_rate_integrand_lognorm(self, umin, d, t, mf, model, finite=False, v_disp=None, t_e = False, tmax=np.inf, tmin=0):
 
@@ -260,18 +278,56 @@ class Pbh(Lens):
         ut = self.umin_upper_bound(d) if finite else self.u_t
         if ut <= umin:
             return 0 
-        else:
-            #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+        
+        #Calculate radial velocity in terms of event duration 
+        v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
+        # if v_rad/v_disp > 10:
+            # return 0
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
                 model.density_dm(d, self.l, self.b) / (mf * v_disp**2) *  
                 v_rad**4 * (htosec / kpctokm)**2 *
                 np.exp(-(v_rad**2 / v_disp**2)) *
                 1)
     
-    def differential_rate_mw_lognorm(self, t, finite=True, v_disp=None, t_e=False, tmax=np.inf, tmin=0):
+    def differential_rate_lognorm(self, t, integrand_func, finite=False, epsabs=1.49e-08, epsrel=1.49e-08):
+    
+        # Innermost double integral
+        def inner_integrand(u, d, mf, t):
+            return integrand_func(u, d, mf, t)
+        
+        # Second integral (over u) - bounds given by d
+        def second_integral(d, mf, t):
+            if finite:
+                u_min, u_max = 0, self.umin_upper_bound(d, mf)[0]
+            else:
+                u_min, u_max = 0, self.u_t
+
+            if 2/3 * u_max**2 < self.mw_model.velocity_dispersion_dm(self.mw_model.dist_center(d, self.l, self.b))**2:
+                local_max = u_max
+            else:
+                local_max = 1.22* (2/3*u_max**2 - self.mw_model.velocity_dispersion_dm(self.mw_model.dist_center(d, self.l, self.b))**2)**(1/2)
+            
+            # result, error = quad(inner_integrand, u_min, u_max, args=(d, mf, t), epsabs=epsabs, epsrel=epsrel, points=[0, u_max/2, 1], limit=3)
+            result, error = quad(inner_integrand, u_min, u_max, args=(d, mf, t), epsabs=epsabs, epsrel=epsrel, points=[local_max])
+
+            return result
+        
+        # Outermost integral (over d)
+        def outer_integral(mf, t):
+            d_min, d_max = 0, self.d_upper_bound(mf) if finite else self.ds
+            result, error = quad(second_integral, d_min, d_max, args=(mf, t), epsabs=epsabs, epsrel=epsrel)
+            # return result * self.mass_function(mf) * mf * np.log(10)  # multiply by mass function and by dlogm * m
+            return result * self.mass_function(mf)   
+
+        # Integrate over mass
+        mf_min, mf_max = 10**(np.log10(self.mass) - 3 * self.sigma), 10**(np.log10(self.mass) + 3 * self.sigma)
+        result, error = quad(outer_integral, mf_min, mf_max, args=(t,), epsabs=epsabs, epsrel=epsrel)
+        
+        return result
+    
+    def differential_rate_mw_lognorm(self, t, finite=True, v_disp=None, t_e=False, tmax=np.inf, tmin=0, epsabs = 1.49e-08, epsrel = 1.49e-08):
         def integrand_func(umin, d, mf, t):
             return self.differential_rate_integrand_lognorm(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e, tmax=tmax, tmin=tmin)
-        return self.differential_rate_lognorm(t, integrand_func, finite=finite)
+        return self.differential_rate_lognorm(t, integrand_func, finite=finite, epsabs = epsabs, epsrel = epsrel)

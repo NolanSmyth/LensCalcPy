@@ -255,16 +255,16 @@ def make_ut_interp(n_points=40, ds = 770, A_thresh=1.34):
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
-rho_max = 4.5
-# rho_max = 10.1
+# rho_max = 4.5
+rho_max = 14.2
 
-# rhos = np.linspace(rho_min, rho_max, 100)
-rhos = np.linspace(rho_min, rho_max, 40)
+rhos = np.linspace(rho_min, rho_max, 300)
+# rhos = np.linspace(rho_min, rho_max, 40)
 
 
 A_thresh_min = 1.01
 A_thresh_max = 1.34
-A_threshs = np.linspace(A_thresh_min, A_thresh_max, 20)
+A_threshs = np.linspace(A_thresh_min, A_thresh_max, 40)
 
 
 # %% ../nbs/04_utils.ipynb 15

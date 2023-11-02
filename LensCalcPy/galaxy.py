@@ -152,6 +152,13 @@ class MilkyWayModel(Galaxy):
     
     def velocity_dispersion_dm(self, r, v_c: float = 220):
         return v_c
+    
+    def mass_dm(self, r):
+        c = r / rs
+        return 4 * np.pi * rhoc * rs**3 * (np.log(1 + c) - c / (1 + c))
+
+    def velocity_dispersion_nfw(self, r):
+        return np.sqrt(G * self.mass_dm(r) / r)
 
 
 # %% ../nbs/08_galaxy.ipynb 7
@@ -208,3 +215,11 @@ class M31Model(Galaxy):
     
     def velocity_dispersion_dm(self, r, v_c: float = 250):
         return v_c
+    
+    def mass_dm(self, r):
+        c = r/rsM31
+        return 4 * np.pi * rhocM31 * rsM31**3 * (np.log(1 + c) - c / (1 + c))
+    
+    def velocity_dispersion_nfw(self, r):
+        return np.sqrt(G * self.mass_dm(r) / r)
+    

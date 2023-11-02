@@ -126,44 +126,86 @@ class Ffp(Lens):
                 1)
 
     def differential_rate(self, t, integrand_func, finite=False, epsabs = 1.49e-08, epsrel = 1.49e-08):
-        #rewrite using tplquad?
-        num = 40  # number of discretization points, empirically, result levels off for >~ 40
-        mf_values = np.linspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
+        # #rewrite using tplquad?
+        # num = 40  # number of discretization points, empirically, result levels off for >~ 40
+        # mf_values = np.linspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
 
-        result = 0
-        for i in range(num):
-            mf = mf_values[i]
-            if i == 0:  # for the first point
-                dm = mf_values[i+1] - mf_values[i]
-            elif i < num - 1:  # for middle points
-                dm = ((mf_values[i+1] - mf_values[i]) + (mf_values[i] - mf_values[i-1])) / 2
-            else:  # for the last point
-                dm = mf_values[i] - mf_values[i-1]
-            if finite:
-                single_result, error = dblquad(integrand_func, 
-                                            # 0, 10, 
-                                            0, self.d_upper_bound(10**mf),
-                                            lambda d: 0, 
-                                            lambda d: self.umin_upper_bound(d, 10**mf),
-                                            args=(10**mf, t),
-                                            epsabs=epsabs,
-                                            epsrel=epsrel,
-                                            )
-            else:
-                single_result, error = dblquad(integrand_func,
-                                               #Without finite size effects, integral blows up at M31 center
-                                            0, self.ds,
-                                            lambda d: 0, 
-                                            lambda d: self.u_t,
-                                            args=(10**mf, t),
-                                            epsabs=epsabs,
-                                            epsrel=epsrel,
-                                            )
+        # result = 0
+        # for i in range(num):
+        #     mf = mf_values[i]
+        #     if i == 0:  # for the first point
+        #         dm = mf_values[i+1] - mf_values[i]
+        #     elif i < num - 1:  # for middle points
+        #         dm = ((mf_values[i+1] - mf_values[i]) + (mf_values[i] - mf_values[i-1])) / 2
+        #     else:  # for the last point
+        #         dm = mf_values[i] - mf_values[i-1]
+        #     if finite:
+        #         single_result, error = dblquad(integrand_func, 
+        #                                     # 0, 10, 
+        #                                     0, self.d_upper_bound(10**mf),
+        #                                     lambda d: 0, 
+        #                                     lambda d: self.umin_upper_bound(d, 10**mf),
+        #                                     args=(10**mf, t),
+        #                                     epsabs=epsabs,
+        #                                     epsrel=epsrel,
+        #                                     )
+        #     else:
+        #         single_result, error = dblquad(integrand_func,
+        #                                        #Without finite size effects, integral blows up at M31 center
+        #                                     0, self.ds,
+        #                                     lambda d: 0, 
+        #                                     lambda d: self.u_t,
+        #                                     args=(10**mf, t),
+        #                                     epsabs=epsabs,
+        #                                     epsrel=epsrel,
+        #                                     )
             
-            result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
+        #     result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
+
+        # result *= self.Z  # normalization
+        # return result
+
+
+        def inner_integrand(u, d, m):
+            return integrand_func(u, d, m, t)
+            
+        # Second integral (over u) - bounds given by d
+        def second_integral(d, m):
+            point = self.sticking_point(m)
+
+            if finite:
+                u_min, u_max = 0, self.umin_upper_bound(d, m)
+            else:
+                u_min, u_max = 0, self.u_t
+
+            result, error = quad(inner_integrand, u_min, u_max, args=(d, m), epsabs=epsabs, epsrel=epsrel, points=[point])
+
+            return result
+            
+        # Third integral (over d)
+        def third_integral(m):
+            if finite:
+                d_min, d_max = 0, self.d_upper_bound(m)
+            else:
+                d_min, d_max = 0, self.ds
+
+            result, error = quad(second_integral, d_min, d_max, args=(m,), epsabs=epsabs, epsrel=epsrel)
+            return result
+        
+        # Outermost integral (over m in log scale)
+        def integrand_logm(logm):
+            m = 10**logm
+            result = third_integral(m)
+            return result * ((m/self.M_norm) ** -self.p)  # multiply by mass function. This is for dN/dlogM
+
+        logm_min = np.log10(self.m_min)
+        logm_max = np.log10(self.m_max)
+
+        result, error = quad(integrand_logm, logm_min, logm_max, epsabs=epsabs, epsrel=epsrel)
 
         result *= self.Z  # normalization
         return result
+
     
     def differential_rate_mw(self, t, finite=True, v_disp=None, t_e=False, epsabs = 1.49e-08, epsrel = 1.49e-08, tmax=np.inf, tmin=0):
         def integrand_func(umin, d, mf, t):
@@ -177,7 +219,7 @@ class Ffp(Lens):
 
     def differential_rate_mw_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
         def integrand_func(umin, d, t, mf):
-            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite)
+            return self.differential_rate_integrand(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp)
         return self.differential_rate_mass(m, integrand_func, finite=finite, tcad=tcad, tobs=tobs, epsabs = epsabs, epsrel = epsrel, efficiency=efficiency, monochromatic=monochromatic)
     
     def differential_rate_m31_mass(self, m, finite=True, v_disp=None, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None, monochromatic=False):
@@ -216,29 +258,38 @@ class Ffp(Lens):
         if efficiency is None:
             def efficiency(t):
                 return 1
-            
+
         point = self.sticking_point(m)
 
-        def integrand(t, d, m, finite):
+        def inner_integrand(u, d, t, m):
+            return integrand_func(u, d, t, m) * efficiency(t)
+            
+        # Second integral (over u) - bounds given by d
+        def second_integral(d, t, m):
             if finite:
-                u_bounds = [0, self.umin_upper_bound(d, m)]
+                u_min, u_max = 0, self.umin_upper_bound(d, m)[0]
             else:
-                u_bounds = [0, self.u_t]
-            u_result, _ = nquad(integrand_func, [u_bounds], args=(d, t, m))
-            return u_result * efficiency(t)
+                u_min, u_max = 0, self.u_t
+            result, error = quad(inner_integrand, u_min, u_max, args=(d, t, m), epsabs=epsabs, epsrel=epsrel, points=[point])
+            return result
+            
+        # Third integral (over d)
+        def third_integral(t, m):
+            if finite:
+                d_min, d_max = 0, self.d_upper_bound(m)
+            else:
+                d_min, d_max = 0, self.ds
 
-        bounds_t = [tcad, tobs]
-
-        if finite:
-            bounds_d = [0, self.d_upper_bound(m)]
-        else:
-            bounds_d = [0, self.ds]
-
-        opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, self.ds]}
-
-        result, error = nquad(integrand, [bounds_t, bounds_d], args=(m, finite), opts=opts)
-
+            result, error = quad(second_integral, d_min, d_max, args=(t, m), epsabs=epsabs, epsrel=epsrel)
+            return result
+                
+        # Outermost integral (over t)
+        t_min = tcad
+        t_max = tobs
+        result, error = quad(third_integral, t_min, t_max, args=(m,), epsabs=epsabs, epsrel=epsrel)
+        
         if monochromatic:
             return result
-        return result*self.f_m(m)
+        return result * self.f_m(m)
+
 
