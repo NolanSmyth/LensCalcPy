@@ -6,9 +6,9 @@ import numpy as np
 # import matplotlib.pyplot as plt
 # from scipy.stats import gaussian_kde
 # import scipy.integrate
-import numba
+# import numba
 import pickle
-import tqdm
+# import tqdm
 import emcee
 from bisect import bisect_left
 
