@@ -76,10 +76,10 @@ def sample_density(params, # galactic longitude (degrees)
 def sample_density_log(params,
                  lbounds=(-10,10),
                  bbounds=(-10,10)
+):
     """
         Computes log of sample_density (see above)
     """
-):
     return np.log(sample_density(params, this_pbh, lbounds, bbounds))
 
 def coord_to_bin_indices(edges, coords):
