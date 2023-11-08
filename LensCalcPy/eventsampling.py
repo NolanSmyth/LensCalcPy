@@ -108,7 +108,7 @@ def mc_integrate(f, region, nsamples=10000):
 
 def grab_initial_states_from_pkl(pbh,
                                  nwalkers,
-                                 pickled_events_file = 'eventsamples.pkl'
+                                 pickled_events_file = '../nbs/eventsamples.pkl'
 ):
     with open(pickled_events_file, 'rb') as eventsamples:
         exsamples = pickle.load(eventsamples)
