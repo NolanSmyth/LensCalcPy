@@ -74,8 +74,9 @@ def sample_density(params, # galactic longitude (degrees)
     return prob
 
 def sample_density_log(params,
-                 lbounds=(-10,10),
-                 bbounds=(-10,10)
+                       this_pbh,
+                       lbounds=(-10,10),
+                       bbounds=(-10,10)
 ):
     """
         Computes log of sample_density (see above)
