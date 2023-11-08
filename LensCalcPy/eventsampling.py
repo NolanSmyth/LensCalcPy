@@ -136,7 +136,6 @@ def generate_events(this_pbh,
                                     sample_density_log, 
                                     args=[this_pbh,lbounds,bbounds])
 
-    nsteps=210000
     p0 = grab_initial_states_from_pkl(nwalkers)
     state = sampler.run_mcmc(p0,nsteps)
     return sampler.get_chain(flat=True, discard=10000)
