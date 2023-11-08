@@ -127,6 +127,7 @@ def generate_events(this_pbh,
                     nsteps = 200000,
                     ndims = 6,
                     nwalkers = 12,
+                    initial_states = None,
                     lbounds = (-90,90),
                     bbounds = (-45,45)
 ):
@@ -136,6 +137,11 @@ def generate_events(this_pbh,
                                     sample_density_log, 
                                     args=[this_pbh,lbounds,bbounds])
 
-    p0 = grab_initial_states_from_pkl(this_pbh, nwalkers)
+    if initial_states is None:
+        p0 = grab_initial_states_from_pkl(this_pbh, nwalkers)
+    elif type(initial_states) == str:
+        p0 = grab_initial_states_from_pkl(this_pbh, nwalkers, pickled_events_file=initial_states)
+    elif type(initial_states) == np.array:
+        p0 = initial_states
     state = sampler.run_mcmc(p0,nsteps)
     return sampler.get_chain(flat=True, discard=10000)
