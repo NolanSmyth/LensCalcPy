@@ -126,45 +126,6 @@ class Ffp(Lens):
                 1)
 
     def differential_rate(self, t, integrand_func, finite=False, epsabs = 1.49e-08, epsrel = 1.49e-08):
-        # #rewrite using tplquad?
-        # num = 40  # number of discretization points, empirically, result levels off for >~ 40
-        # mf_values = np.linspace(np.log10(self.m_min), np.log10(self.m_max), num=num)
-
-        # result = 0
-        # for i in range(num):
-        #     mf = mf_values[i]
-        #     if i == 0:  # for the first point
-        #         dm = mf_values[i+1] - mf_values[i]
-        #     elif i < num - 1:  # for middle points
-        #         dm = ((mf_values[i+1] - mf_values[i]) + (mf_values[i] - mf_values[i-1])) / 2
-        #     else:  # for the last point
-        #         dm = mf_values[i] - mf_values[i-1]
-        #     if finite:
-        #         single_result, error = dblquad(integrand_func, 
-        #                                     # 0, 10, 
-        #                                     0, self.d_upper_bound(10**mf),
-        #                                     lambda d: 0, 
-        #                                     lambda d: self.umin_upper_bound(d, 10**mf),
-        #                                     args=(10**mf, t),
-        #                                     epsabs=epsabs,
-        #                                     epsrel=epsrel,
-        #                                     )
-        #     else:
-        #         single_result, error = dblquad(integrand_func,
-        #                                        #Without finite size effects, integral blows up at M31 center
-        #                                     0, self.ds,
-        #                                     lambda d: 0, 
-        #                                     lambda d: self.u_t,
-        #                                     args=(10**mf, t),
-        #                                     epsabs=epsabs,
-        #                                     epsrel=epsrel,
-        #                                     )
-            
-        #     result += single_result * ((10**mf/1) ** -self.p) * dm # multiply by mass function and by dlogm. This is for dN/dlogM
-
-        # result *= self.Z  # normalization
-        # return result
-
 
         def inner_integrand(u, d, m):
             return integrand_func(u, d, m, t)
