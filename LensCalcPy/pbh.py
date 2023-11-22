@@ -24,19 +24,24 @@ import functools
 import pickle
 from abc import ABC, abstractmethod
 
+from numba import njit
+from numba.experimental import jitclass
+
 from fastcore.test import *
 
 # %% ../nbs/00_pbh.ipynb 5
+@jitclass
 class Pbh(Lens):
     """A class to represent a PBH population"""
-
+    mw_model : MilkyWayModel
+    m31_model : M31Model
     def __init__(self,
                 mass: float, # PBH mass in solar masses
                 f_dm: float, # PBH fraction of the DM density
-                mw_model=None,
-                m31_model=None,
-                l = None,
-                b = None,
+                mw_model = None,
+                m31_model = None,
+                l = 0,
+                b = 0,
                 u_t = 1,
                 ds = 770,
                 lognorm=False,
@@ -46,8 +51,8 @@ class Pbh(Lens):
         Initialize the PBH population
         """
 
-        self.mw_model = mw_model or MilkyWayModel(mw_parameters)
-        self.m31_model = m31_model or M31Model(m31_parameters)
+        self.mw_model = mw_model or MilkyWayModel()
+        self.m31_model = m31_model or M31Model()
         
         if l is None:
             raise ValueError("Galactic longitude must be specified")

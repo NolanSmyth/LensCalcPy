@@ -14,7 +14,7 @@ import pickle
 from abc import ABC, abstractmethod
 
 # %% ../nbs/07_lens.ipynb 5
-class Lens(ABC):
+class Lens():
     """Abstract class for lens objects.
     """
     def __init__(self, mass, u_t = 1, ds=770):
@@ -58,7 +58,7 @@ class Lens(ABC):
             result, error = nquad(integrand_func, [umin_bounds, d_bounds], args=[t])
             return result
 
-    @abstractmethod
+    # @abstractmethod
     def compute_differential_rate(self, t, finite=False):
         pass
 

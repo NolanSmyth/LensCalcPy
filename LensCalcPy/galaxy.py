@@ -12,32 +12,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from fastcore.test import *
+from numba.experimental import jitclass
+from numba import njit, typed, typeof
 
 from abc import ABC, abstractmethod
 
 # %% ../nbs/08_galaxy.ipynb 5
-class Galaxy(ABC):
+class Galaxy():
     def __init__(self, parameters):
         # Initialize common parameters
         for key, value in parameters.items():
             setattr(self, key, value)
 
-    @abstractmethod
+    # @abstractmethod
     def velocity_dispersion_stars(self, r, v_c):
         # Velocity dispersion of stars at distance r from center of galaxy
         pass
     
-    @abstractmethod
+    # @abstractmethod
     def dist_center(self, d):
         #Distance from center of galaxy for given distance d along line of sight given by l, b
         pass
     
-    @abstractmethod
+    # @abstractmethod
     def density_stars(self, d):
         # Density of stars at distance d along the line of sight
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def density_dm(self, r):
         # Density of dark matter at distance r from center of galaxy
         pass
@@ -45,18 +47,25 @@ class Galaxy(ABC):
 # %% ../nbs/08_galaxy.ipynb 6
 mw_parameters = {}
 
+
+@jitclass
 class MilkyWayModel(Galaxy):
-    def __init__(self, parameters):
-        super().__init__(parameters)
+    def __init__(self):
+        pass
+        #super().__init__()
 
     # def dist_center(self, d: float, # distance from the Sun in kpc
     #         ) -> float: #distance to the MW center in kpc
     #     return np.sqrt(d**2 + rEarth**2 - 2*d*rEarth*np.cos(np.radians(l))*np.cos(np.radians(b)))
-    
-    def dist_center(self, d: float, l: float, b: float) -> float:
+
+    @staticmethod
+    # @njit
+    def dist_center(d: float, l: float, b: float) -> float:
         return np.sqrt(d**2 + rEarth**2 - 2*d*rEarth*np.cos(np.radians(l))*np.cos(np.radians(b)))
     
-    def get_primed_coords(self, d: float, # distance from Sun in kpc
+    @staticmethod
+    # @njit 
+    def get_primed_coords(d: float, # distance from Sun in kpc
                       l: float = l, # galactic longitude in degrees
                       b: float = b, # galactic latitude in degrees
                       )-> tuple:
@@ -83,12 +92,15 @@ class MilkyWayModel(Galaxy):
     # Add Koshimoto Parametric MW Model
     # https://iopscience.iop.org/article/10.3847/1538-4357/ac07a8/pdf
 
-    def zthin(self, r):
+    @staticmethod
+    # @njit
+    def zthin(r):
         if r > 4.5:
             return zthinSol - (zthinSol - zthin45) * (rsol - r) / (rsol - 4.5)
         else:
             return zthin45
 
+    
     def rho_thin(self, r, z) -> float:
         if r > rdBreak:
             result = rho_thin_Sol * zthinSol / self.zthin(r) * \
@@ -101,7 +113,9 @@ class MilkyWayModel(Galaxy):
         
         return result 
     
-    def rho_thick(self, r, z) -> float:
+    @staticmethod
+    # @njit
+    def rho_thick(r, z) -> float:
         if r > rdBreak:
             result = rho_thick_Sol * np.exp(-((r - rsol) / rthick)) * \
                 np.exp(-(np.abs(z) / zthickSol))
@@ -113,14 +127,18 @@ class MilkyWayModel(Galaxy):
 
     
     # Bulge Density
-    def rsf(self, xp, yp, zp):
+    @staticmethod
+    # @njit
+    def rsf(xp, yp, zp):
         rs = (((xp/x0)**cperp + (yp/y0)**cperp)**(cpar/cperp) + (zp/z0)**cpar)**(1/cpar)
         return rs
     
     def fE(self, xp, yp, zp):
         return np.exp(-self.rsf(xp, yp, zp))
     
-    def cut(self, x):
+    @staticmethod
+    # @njit
+    def cut(x):
         if x > 0:
             return np.exp(-x**2)
         else:
@@ -156,10 +174,11 @@ class MilkyWayModel(Galaxy):
 
 # %% ../nbs/08_galaxy.ipynb 7
 m31_parameters = {"use_max_density": True}
-
+@jitclass
 class M31Model(Galaxy):
-    def __init__(self, parameters):
-        super().__init__(parameters)
+    def __init__(self):
+        pass
+        #super().__init__()
 
     def dist_center(self, d, l=None, b=None):
         return dsM31 - d

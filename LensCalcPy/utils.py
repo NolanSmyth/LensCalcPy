@@ -22,6 +22,8 @@ from .interpolations.interps import ut_interp, ut_interp_mw, ut_interp_rho
 
 import matplotlib.pyplot as plt
 
+from numba import njit
+
 from fastcore.test import *
 
 # %% ../nbs/04_utils.ipynb 4
@@ -268,6 +270,7 @@ A_threshs = np.linspace(A_thresh_min, A_thresh_max, 20)
 
 
 # %% ../nbs/04_utils.ipynb 15
+@njit
 def ut_func_new(rho, A_thresh):
     # rho = np.asarray(rho) 
     rho = np.atleast_1d(rho) # Ensure rho is at least 1-dimensional
