@@ -33,42 +33,51 @@ ut_interp_mw = ut_interp_mw
 ut_interp_rho = ut_interp_rho
 
 # %% ../nbs/04_utils.ipynb 5
+@njit
 def dist_mw(d: float, # distance from the Sun in kpc
             ) -> float: #distance to the MW center in kpc
     return np.sqrt(d**2 + rEarth**2 - 2*d*rEarth*np.cos(np.radians(l))*np.cos(np.radians(b)))
 
+@njit
 def dist_m31(d: float, # distance from the Sun in kpc
              ) -> float: #distance to the M31 center in kpc
             return dsM31 - d
 
+@njit
 def density_mw(r: float, # distance to MW center in kpc
                 ) -> float: # DM density in Msun/kpc^3
     return rhoc / ((r/rs) * (1 + r/rs)**2)
 
+@njit
 def density_m31(r: float, # distance to M31 center in kpc
                 ) -> float: # DM density in Msun/kpc^3
     return rhocM31 / ((r/rsM31) * (1 + r/rsM31)**2)
 
+@njit
 def mass_enclosed_mw(r: float  # distance to MW center in kpc
                       ) -> float : # enclosed DM mass in Msun
     return 4*pi * rhoc * rs**3 * (np.log(1 + r/rs) - (r/rs)/(1 + r/rs))
 
+@njit
 def mass_enclosed_m31(r: float  # distance to M31 center in kpc
                         ) -> float : # enclosed DM mass in Msun
     return 4*pi * rhocM31 * rsM31**3 * (np.log(1 + r/rsM31) - (r/rsM31)/(1 + r/rsM31))
 
+@njit
 def velocity_dispersion_mw(r: float, # distance from the MW center in kpc
                         ) -> float: # velocity dispersion in km/s
     if r == 0:
         return 0
     return np.sqrt(G * mass_enclosed_mw(r) / r) 
 
+@njit
 def velocity_dispersion_m31(r: float, # distance from the M31 center in kpc
                         ) -> float: # velocity dispersion in km/s
     if r == 0:
         return 0
     return np.sqrt(G * mass_enclosed_m31(r) / r)
 
+@njit
 def dist(d: float, # distance from the Sun in kpc
          ds: float = ds, # distance to the source in kpc
          ) -> float: #weighted lensing distance in kpc
@@ -76,12 +85,14 @@ def dist(d: float, # distance from the Sun in kpc
          raise ValueError("Distance of lens must be less than source distance but d = " + str(d) + " and ds = " + str(ds))
     return d * (1 - d/ds)
 
+@njit
 def einstein_rad(d: float, # distance from the Sun in kpc
                  mass: float, # mass of the lens in Msun
                  ds: float = ds, # distance to the source in kpc
                  ) -> float: # Einstein radius in kpc
     return (4 * G * mass * dist(d, ds)/c**2)**(1/2)
 
+@njit
 def velocity_radial(d: float, # distance from the Sun in kpc
                     mass: float, # mass of the lens in Msun
                     umin: float, # minimum impact parameter
@@ -90,6 +101,7 @@ def velocity_radial(d: float, # distance from the Sun in kpc
                     ) -> float: # radial velocity in km/s
     return 2*einstein_rad(d, mass) * (ut**2 - umin**2)**(1/2) / t * kpctokm
 
+@njit
 def event_duration(d: float, # distance from the Sun in kpc
                    mass: float, # mass of the lens in Msun
                    umin: float, # minimum impact parameter
@@ -107,6 +119,7 @@ def event_duration(d: float, # distance from the Sun in kpc
 # of the Galactic bar,where \[Alpha]bar=27\[Degree] is applied as the bar angle.
 # galactocentric coordniates x', y', z' as function of d, distance from Sun
 
+@njit
 def get_primed_coords(d: float, # distance from Sun in km
                       l: float = l, # galactic longitude in degrees
                       b: float = b, # galactic latitude in degrees
@@ -130,6 +143,7 @@ def get_primed_coords(d: float, # distance from Sun in km
 
     return x_prime, y_prime, z_prime
 
+@njit
 def scientific_format(x, pos):
     """
     Formats a number in scientific notation in latex
@@ -146,6 +160,7 @@ def w_func(m_pbh, lam):
     return 5.98 * (m_pbh / 1e-10) * (lam / 6210)**(-1)
 
 # Compute 'rho' parameter given the mass of the primordial black hole and the lens distance
+@njit
 def rho_func(m_pbh, dl, ds):
     if dl >= ds:
         # raise ValueError("dl must be less than ds to prevent division by zero.")
@@ -158,6 +173,7 @@ def rho_func(m_pbh, dl, ds):
 
 
 # Compute magnification given the impact parameter 'u'
+@njit
 def magnification(u):
         '''
         Compute the magnification given the impact parameter 'u' in the point-source-point-lens limit.
