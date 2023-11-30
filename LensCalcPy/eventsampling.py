@@ -19,8 +19,8 @@ def sample_density(params, # galactic longitude (degrees)
                  # dl,  # lens distance from Earth (kpc)
                  # ds,  # source distance from Earth (kpc)
                  mw_model, # LensCalcPy.pbh object
-                 lbounds=(-10,10),
-                 bbounds=(-10,10),
+                 lbounds=(-180,180),
+                 bbounds=(-90,90),
                  mass=1,
                  u_t=2
                  #umin=.5 # minimum impact parameter - u=2 ~50 mmag
@@ -73,8 +73,8 @@ def sample_density(params, # galactic longitude (degrees)
 @njit
 def sample_density_log(params, 
                      mw_model,
-                     lbounds=(-10,10),
-                     bbounds=(-10,10),
+                     lbounds=(-180,180),
+                     bbounds=(-90,90),
 ):
     """
         Computes log of sample_density (see above)
@@ -127,8 +127,8 @@ def generate_events(mw_model,
                     ndims = 6,
                     nwalkers = 12,
                     initial_states = None,
-                    lbounds = (-90,90),
-                    bbounds = (-45,45)
+                    lbounds = (-180,180),
+                    bbounds = (-90,90)
 ):
 
     sampler = emcee.EnsembleSampler(nwalkers,
