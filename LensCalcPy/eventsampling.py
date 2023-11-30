@@ -11,15 +11,18 @@ import pickle
 # import tqdm
 import emcee
 from bisect import bisect_left
+from numba import njit
 
-
+@njit
 def sample_density(params, # galactic longitude (degrees)
                  # b, # galactic latitide (degrees)
                  # dl,  # lens distance from Earth (kpc)
                  # ds,  # source distance from Earth (kpc)
-                 this_pbh, # LensCalcPy.pbh object
+                 mw_model, # LensCalcPy.pbh object
                  lbounds=(-10,10),
                  bbounds=(-10,10),
+                 mass=1,
+                 u_t=2
                  #umin=.5 # minimum impact parameter - u=2 ~50 mmag
 ):
     """
@@ -35,10 +38,6 @@ def sample_density(params, # galactic longitude (degrees)
        umin - minimum impact parameter
        crossing time - timescale of microlensing event
 
-    this_pbh : LensCalcPy.Pbh
-        Wrapper object with function to compute event rate.
-        Member variables are overwritten!
-
     lbounds : tuple(float, float)
         bounds on galactic longitude in degrees
     bbounds : tuple(float, float)
@@ -49,39 +48,38 @@ def sample_density(params, # galactic longitude (degrees)
     float
         Event rate in (hours)**-(2) * (kpc)**(-2) * (degrees)**(-2)
     """
-
-    this_pbh.l, this_pbh.b, dl, this_pbh.ds, umin, crossing_time = params
-    if this_pbh.l < lbounds[0] \
-    or this_pbh.l > lbounds[1] \
-    or this_pbh.b > bbounds[1] \
-    or this_pbh.b < bbounds[0] \
-    or dl < 0 or dl > this_pbh.ds \
+    l, b, dl, ds, umin, crossing_time = params
+    if l < lbounds[0] \
+    or l > lbounds[1] \
+    or b > bbounds[1] \
+    or b < bbounds[0] \
+    or dl < 0 or dl > ds \
     or umin <= 0 \
     or crossing_time <= 0:
         return 0
-    prob = this_pbh.differential_rate_integrand(umin ,dl, crossing_time, this_pbh.mw_model)
-    # multiply by expected number of stars in volume element 
-    expected_stars = (np.pi/180)**2 * this_pbh.ds**2 * np.cos(this_pbh.b*np.pi/180) * \
-            this_pbh.mw_model.density_stars(this_pbh.ds, \
-                                            this_pbh.l,  \
-                                            this_pbh.b) 
+    prob = differential_rate_integrand(l, b, dl, ds, umin, crossing_time, u_t, mass, mw_model)
+    expected_stars = (np.pi/180)**2 * ds**2 * np.cos(b*np.pi/180) * \
+            mw_model.density_stars(ds, \
+                                   l,  \
+                                   b) 
     prob*=expected_stars   
     if prob < 0 or np.isnan(prob):
         print(f"error: expected stars = {expected_stars}")
-        print(f"density: {this_pbh.mw_model.density_stars(this_pbh.ds, this_pbh.l, this_pbh.b) }")
-        print(f"cos(b): {np.cos(this_pbh.b)}")
+        print(f"density: {mw_model.density_stars(ds, l, b) }")
+        print(f"cos(b): {np.cos(b)}")
         return 0
     return prob
 
-def sample_density_log(params,
-                       this_pbh,
-                       lbounds=(-10,10),
-                       bbounds=(-10,10)
+@njit
+def sample_density_log(params, 
+                     mw_model,
+                     lbounds=(-10,10),
+                     bbounds=(-10,10),
 ):
     """
         Computes log of sample_density (see above)
     """
-    return np.log(sample_density(params, this_pbh, lbounds, bbounds))
+    return np.log(sample_density_f(params, mw_model, lbounds, bbounds))
 
 def coord_to_bin_indices(edges, coords):
     return tuple(bisect_left(edges[:,icoord], coords[icoord]) for icoord in range(len(coords)))
@@ -124,7 +122,7 @@ def grab_initial_states_from_pkl(pbh,
             this_prob = sample_density_log(p, pbh)
     return p0
 
-def generate_events(this_pbh,
+def generate_events(mw_model,
                     nsteps = 200000,
                     ndims = 6,
                     nwalkers = 12,
@@ -136,12 +134,12 @@ def generate_events(this_pbh,
     sampler = emcee.EnsembleSampler(nwalkers,
                                     ndims,
                                     sample_density_log, 
-                                    args=[this_pbh,lbounds,bbounds])
+                                    args=[mw_model,lbounds,bbounds])
 
     if initial_states is None:
-        p0 = grab_initial_states_from_pkl(this_pbh, nwalkers)
+        p0 = grab_initial_states_from_pkl(mw_model, nwalkers)
     elif type(initial_states) == str:
-        p0 = grab_initial_states_from_pkl(this_pbh, nwalkers, pickled_events_file=initial_states)
+        p0 = grab_initial_states_from_pkl(mw_model, nwalkers, pickled_events_file=initial_states)
     elif type(initial_states) == np.array:
         p0 = initial_states
     state = sampler.run_mcmc(p0,nsteps)
