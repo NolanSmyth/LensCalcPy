@@ -90,19 +90,12 @@ class Pbh(Lens):
         ut = self.umin_upper_bound(d) if finite else self.u_t
         if ut <= umin:
             return 0
-        if t_e: 
-            #Calculate radial velocity in terms of einstein crossing time
-            v_rad = einstein_rad(d, self.mass, self.ds) * kpctokm / (t * htosec) 
-            t_duration = max(ut, self.umin_upper_bound(d)) * 2 * einstein_rad(d, self.mass) * kpctokm / v_rad / htosec #event duration in hours
-
-            if t_duration > tmax or t_duration < tmin:
-                return 0   
-        elif t_fwhm:
+        if t_fwhm:
             t_E = t_e_from_fwhm(t, umin, finite, rho_func(self.mass, d, self.ds))
             v_rad = einstein_rad(d, self.mass, self.ds) * kpctokm / (t_E * htosec)
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut) 
+            v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut, self.ds) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
             # v_disp = model.velocity_dispersion_nfw(r)
@@ -149,12 +142,10 @@ class Pbh(Lens):
         # Second integral (over u) - bounds given by d
         def second_integral(d, t):
             if finite:
-                # u_min, u_max = 0, self.umin_upper_bound(d)[0]
-                u_min, u_max = 0, self.umin_upper_bound(d)[0]
-
+                u_min, u_max = 0, self.umin_upper_bound(d)
             else:
                 u_min, u_max = 0, self.u_t
-            
+
             result, error = quad(inner_integrand, u_min, u_max, args=(d, t), epsabs=epsabs, epsrel=epsrel)
 
             return result
@@ -162,6 +153,7 @@ class Pbh(Lens):
         # Outermost integral (over d)
         def outer_integral(t):
             d_min, d_max = 0, self.d_upper_bound() if finite else self.ds
+
             result, error = quad(second_integral, d_min, d_max, args=(t,), epsabs=epsabs, epsrel=epsrel)
             # return result * self.mass_function(mf) * mf * np.log(10)  # multiply by mass function and by dlogm * m
             return result  
@@ -240,7 +232,7 @@ class Pbh(Lens):
             return 0 
         
         #Calculate radial velocity in terms of event duration 
-        v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+        v_rad = velocity_radial(d, mf, umin, t * htosec, ut, self.ds) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
         # if v_rad/v_disp > 10:
@@ -295,6 +287,7 @@ class Pbh(Lens):
     
     def differential_rate_integrand_new(self, umin, d, model, finite=False, v_disp=None, tcad = 0.07, tobs = 3, t_fwhm=False):
 
+        #Analytically perform integral over t
         r = model.dist_center(d, self.l, self.b)
         ut = self.umin_upper_bound(d) if finite else self.u_t
         if ut <= umin:
@@ -305,11 +298,12 @@ class Pbh(Lens):
         if t_fwhm:
             ut = u_fwhm_interp([rho_func(self.mass, d, self.ds), umin])[0]
 
-        A = 2/(ut**2 - umin**2)**0.5 * model.density_dm(d, self.l, self.b) / (self.mass * (v_disp*htosec)**2 ) * (2 * einstein_rad(d, self.mass, self.ds)* (ut**2 - umin**2)**0.5)**4 * kpctokm**2
-        B = (2*einstein_rad(d, self.mass, self.ds) * kpctokm * (ut**2 - umin**2)**0.5)**2 / (v_disp*htosec)**2
+        A = 2/(ut**2 - umin**2)**0.5 * model.density_dm(d, self.l, self.b) / (self.mass * (v_disp*htosec/kpctokm)**2 ) * (2 * einstein_rad(d, self.mass, self.ds)* (ut**2 - umin**2)**0.5)**4 
+        B = (2*einstein_rad(d, self.mass, self.ds)  * (ut**2 - umin**2)**0.5)**2 / (v_disp*htosec/kpctokm)**2
 
         def integral_t(t):
-            return A/(2*B) * (np.exp(-B/t**2 )/t - np.pi**(1/2) * erf(B**(1/2)/t) /(2* B**(1/2)))
+            # return A/(2*B) * (np.exp(-B/t**2 )/t - np.pi**(1/2) * erf(B**(1/2)/t) /(2* B**(1/2)))
+            return A*(np.exp(-B/t**2 )/(2*B*t) - np.pi**(0.5) * erf(B**(0.5)/t) /(4* B**(1.5)))
 
         return integral_t(tobs) - integral_t(tcad)
     
@@ -323,10 +317,8 @@ class Pbh(Lens):
         def second_integral(d):
             if finite:
                 u_min, u_max = 0, self.umin_upper_bound(d)[0]
-
             else:
-                u_min, u_max = 0, self.u_t
-            
+                u_min, u_max = 0, self.u_t            
             result, error = quad(inner_integrand, u_min, u_max, args=(d), epsabs=epsabs, epsrel=epsrel)
 
             return result

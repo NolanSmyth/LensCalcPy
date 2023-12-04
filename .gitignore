@@ -7,6 +7,8 @@ examples/interps
 examples/bounds
 examples/figures
 examples/draft_figures
+examples/r90_data
+examples/extended_dat
 
 *.bak
 .gitattributes
