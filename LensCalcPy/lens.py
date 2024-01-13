@@ -40,7 +40,7 @@ class Lens():
         ut = self.umin_upper_bound(d) if (self.ut_interp and finite) else self.u_t
         if ut <= umin:
             return 0
-        v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut)
+        v_rad = velocity_radial(d, self.ds, self.mass, umin, t * htosec, ut)
         v_disp = v_disp_func(r)
         density_input = d if density_func_uses_d else r
         return 2 * (1 / (ut**2 - umin**2)**0.5 *

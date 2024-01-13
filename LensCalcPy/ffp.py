@@ -115,7 +115,7 @@ class Ffp(Lens):
                 return 0     
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+            v_rad = velocity_radial(d, self.ds, mf, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_stars(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *

@@ -79,7 +79,7 @@ def velocity_dispersion_m31(r: float, # distance from the M31 center in kpc
 
 @njit
 def dist(d: float, # distance from the Sun in kpc
-         ds: float = ds, # distance to the source in kpc
+         ds: float, # distance to the source in kpc
          ) -> float: #weighted lensing distance in kpc
     if d > ds:
          raise ValueError("Distance of lens must be less than source distance but d = " + str(d) + " and ds = " + str(ds))
@@ -88,18 +88,19 @@ def dist(d: float, # distance from the Sun in kpc
 @njit
 def einstein_rad(d: float, # distance from the Sun in kpc
                  mass: float, # mass of the lens in Msun
-                 ds: float = ds, # distance to the source in kpc
+                 ds: float, # distance to the source in kpc
                  ) -> float: # Einstein radius in kpc
     return (4 * G * mass * dist(d, ds)/c**2)**(1/2)
 
 @njit
-def velocity_radial(d: float, # distance from the Sun in kpc
+def velocity_radial(d: float, # distance of the lens from the Sun in kpc
+                    ds: float, # distance of source from the Sun in kpc
                     mass: float, # mass of the lens in Msun
                     umin: float, # minimum impact parameter
                     t: float, # crossing time in hours
                     ut: float, # threshold impact parameter
                     ) -> float: # radial velocity in km/s
-    return 2*einstein_rad(d, mass) * (ut**2 - umin**2)**(1/2) / t * kpctokm
+    return 2*einstein_rad(d, mass, ds) * (ut**2 - umin**2)**(1/2) / t * kpctokm
 
 @njit
 def event_duration(d: float, # distance from the Sun in kpc

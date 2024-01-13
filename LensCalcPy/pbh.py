@@ -109,7 +109,7 @@ class Pbh(Lens):
                 return 0     
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(d, self.mass, umin, t * htosec, ut) 
+            v_rad = velocity_radial(d, self.ds, self.mass, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
@@ -276,7 +276,7 @@ class Pbh(Lens):
             return 0 
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(d, mf, umin, t * htosec, ut) 
+            v_rad = velocity_radial(d, self.ds, mf, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
@@ -313,7 +313,7 @@ def differential_rate_integrand(l, b, dl, ds, umin, t, u_t, mass, model, finite=
                 return 0     
         else:
             #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(dl, mass, umin, t * htosec, ut) 
+            v_rad = velocity_radial(dl, ds, mass, umin, t * htosec, ut) 
         if v_disp is None: 
             v_disp = model.velocity_dispersion_dm(r)
         return 2 * (1 / (ut**2 - umin**2)**0.5 *
