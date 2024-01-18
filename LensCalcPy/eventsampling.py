@@ -18,7 +18,7 @@ def sample_density(params, # galactic longitude (degrees)
                  # b, # galactic latitide (degrees)
                  # dl,  # lens distance from Earth (kpc)
                  # ds,  # source distance from Earth (kpc)
-                 mw_model, # LensCalcPy.pbh object
+                 mw_model, # LensCalcPy.galaxy object
                  lbounds=(-180,180),
                  bbounds=(-90,90),
                  mass=1,
@@ -79,7 +79,67 @@ def sample_density_log(params,
     """
         Computes log of sample_density (see above)
     """
-    return np.log(sample_density_f(params, mw_model, lbounds, bbounds))
+    return np.log(sample_density(params, mw_model, lbounds, bbounds))
+
+@njit
+def sample_density_single_source(params, # galactic longitude (degrees)
+                 # b, # galactic latitide (degrees)
+                 # dl,  # lens distance from Earth (kpc)
+                 # ds,  # source distance from Earth (kpc)
+                 mw_model, # LensCalcPy.galaxy object
+                 lbounds=(-180,180),
+                 bbounds=(-90,90),
+                 mass=1,
+                 u_t=2
+                 #umin=.5 # minimum impact parameter - u=2 ~50 mmag
+):
+    """
+    Compute density of microlensing event space in differential volume.
+
+    Parameters
+    ----------
+    params : np.array
+       l  - galactic longitude (degrees)
+       b  - galactic latitide (degrees) 
+       dl - lens distance from Earth (kpc)
+       ds - source distance from Earth (kpc)
+       umin - minimum impact parameter
+       crossing time - timescale of microlensing event
+
+    lbounds : tuple(float, float)
+        bounds on galactic longitude in degrees
+    bbounds : tuple(float, float)
+        bounds on galactic latitude in degrees
+
+    Returns
+    -------
+    float
+        Event rate in (hours)**-(2) * (kpc)**(-2) * (degrees)**(-2)
+    """
+    l, b, dl, ds, umin, crossing_time = params
+    if l < lbounds[0] \
+    or l > lbounds[1] \
+    or b > bbounds[1] \
+    or b < bbounds[0] \
+    or dl < 0 or dl > ds \
+    or umin <= 0 \
+    or crossing_time <= 0:
+        return 0
+    prob = differential_rate_integrand(l, b, dl, ds, umin, crossing_time, u_t, mass, mw_model)
+    if prob < 0 or np.isnan(prob):
+        return 0
+    return prob
+
+@njit
+def sample_density_single_source_log(params, 
+                     mw_model,
+                     lbounds=(-180,180),
+                     bbounds=(-90,90),
+):
+    """
+        Computes log of sample_density (see above)
+    """
+    return np.log(sample_density_single_source(params, mw_model, lbounds, bbounds))
 
 def coord_to_bin_indices(edges, coords):
     return tuple(bisect_left(edges[:,icoord], coords[icoord]) for icoord in range(len(coords)))
