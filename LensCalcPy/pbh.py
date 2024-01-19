@@ -290,34 +290,71 @@ class Pbh(Lens):
             return self.differential_rate_integrand_lognorm(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e, tmax=tmax, tmin=tmin)
         return self.differential_rate_lognorm(t, integrand_func, finite=finite)
 
-@njit
+def rate_total(ds, m, u_t, integrand_func, finite=True, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None):        
+    
+    # if efficiency is None:
+    #     def efficiency(t):
+    #         return 1
+        
+    # point = self.sticking_point()
+
+    def integrand(t, d, finite):
+        if finite:
+            u_bounds = [0, umin_upper_bound(d, ds, m, u_t)]
+        else:
+            u_bounds = [0, u_t]
+        u_result, _ = nquad(integrand_func, [u_bounds], args=(d, t))
+        return u_result # * efficiency(t)
+
+    bounds_t = [tcad, tobs]
+
+    if finite:
+        bounds_d = [0, min(d_upper_bound(ds, m, u_t), ds)]
+    else:
+        bounds_d = [0, ds]
+
+    # opts = {"epsabs": epsabs, "epsrel": epsrel, "points":[point, ds]}
+    opts = {'epsabs': epsabs, 'epsrel': epsrel, 'points':[ds]}
+
+    result, error = nquad(integrand, [bounds_t, bounds_d], args=[finite], opts=opts)
+    return result
+
+# @njit
+def d_upper_bound(ds, m, u_t):
+    #Determine upper limit for d otherwise for low masses, the contribution which only comes from d << 1 gets missed
+    d_arr = np.logspace(-3, np.log10(ds*0.99), 100)
+    for d in d_arr:
+        if umin_upper_bound(d, ds, m, u_t) == 0:
+            return d
+    return ds
+
+# @njit
 def umin_upper_bound(dl, ds, m, u_t):
     rho = rho_func(m, dl, ds)
     return ut_func_new(rho, magnification(u_t))
-
+  
 @njit
 def differential_rate_integrand(l, b, dl, ds, umin, t, u_t, mass, model, finite=False, v_disp=None, t_e = False, tmax=np.inf, tmin=0):
 
-        r = model.dist_center(dl, l, b)
-        #ut = umin_upper_bound(dl, ds, mass, u_t) if finite else u_t
-        ut = u_t
-        if ut <= umin:
-            return 0
-        if t_e: 
-            #Calculate radial velocity in terms of einstein crossing time
-            v_rad = einstein_rad(dl, mass, ds) * kpctokm / (t * htosec) 
-            # t_duration = max(ut, umin_upper_bound(dl, ds, mass ,u_t)) * 2 * einstein_rad(dl, mass) * kpctokm / v_rad / htosec #event duration in hours
-            t_duration = ut * 2 * einstein_rad(dl, mass) * kpctokm / v_rad / htosec #event duration in hours
-
-            if t_duration > tmax or t_duration < tmin:
-                return 0     
-        else:
-            #Calculate radial velocity in terms of event duration (t_fwhm)
-            v_rad = velocity_radial(dl, ds, mass, umin, t * htosec, ut) 
-        if v_disp is None: 
-            v_disp = model.velocity_dispersion_dm(r)
-        return 2 * (1 / (ut**2 - umin**2)**0.5 *
-                model.density_dm(dl, l, b) / (mass * v_disp**2) *  
-                v_rad**4 * (htosec / kpctokm)**2 *
-                np.exp(-(v_rad**2 / v_disp**2)) *
-                1)
+    r = model.dist_center(dl, l, b)
+    #ut = umin_upper_bound(dl, ds, mass, u_t) if finite else u_t
+    ut = u_t
+    if ut <= umin:
+        return 0
+    if t_e: 
+        #Calculate radial velocity in terms of einstein crossing time
+        v_rad = einstein_rad(dl, mass, ds) * kpctokm / (t * htosec) 
+        # t_duration = max(ut, umin_upper_bound(dl, ds, mass ,u_t)) * 2 * einstein_rad(dl, mass) * kpctokm / v_rad / htosec #event duration in hours
+        t_duration = ut * 2 * einstein_rad(dl, mass, ds) * kpctokm / v_rad / htosec #event duration in hours
+        if t_duration > tmax or t_duration < tmin:
+            return 0     
+    else:
+        #Calculate radial velocity in terms of event duration (t_fwhm)
+        v_rad = velocity_radial(dl, ds, mass, umin, t * htosec, ut) 
+    if v_disp is None: 
+        v_disp = model.velocity_dispersion_dm(r)
+    return 2 * (1 / (ut**2 - umin**2)**0.5 *
+            model.density_dm(dl, l, b) / (mass * v_disp**2) *  
+            v_rad**4 * (htosec / kpctokm)**2 *
+            np.exp(-(v_rad**2 / v_disp**2)) *
+            1)
