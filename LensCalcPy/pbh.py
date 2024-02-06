@@ -290,6 +290,28 @@ class Pbh(Lens):
             return self.differential_rate_integrand_lognorm(umin, d, t, mf, self.mw_model, finite=finite, v_disp=v_disp, t_e = t_e, tmax=tmax, tmin=tmin)
         return self.differential_rate_lognorm(t, integrand_func, finite=finite)
 
+def differential_rate(ds, m, u_t, t, integrand_func, finite=False):
+    if finite:
+        result, error = dblquad(integrand_func, 
+                                0, d_upper_bound(ds, m, u_t),
+                                lambda d: 0, 
+                                lambda d: umin_upper_bound(d, ds, m, u_t),
+                                args=[t],
+                                epsabs=0,
+                                epsrel=1e-1,
+                                )
+    else:
+        result, error = dblquad(integrand_func,
+                                    #Without finite size effects, integral blows up at M31 center
+                                0, ds*0.99,
+                                lambda d: 0, 
+                                lambda d: u_t,
+                                args=[t],
+                                epsabs=0,
+                                epsrel=1e-1,
+                                )
+    return result
+
 def rate_total(ds, m, u_t, integrand_func, finite=True, tcad=0.07, tobs=3, epsabs = 1.49e-08, epsrel = 1.49e-08, efficiency=None):        
     
     # if efficiency is None:
