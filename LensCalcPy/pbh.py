@@ -11,6 +11,7 @@ from .galaxy import *
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from math import erf
 from scipy.integrate import nquad, dblquad, tplquad
 from scipy.optimize import minimize_scalar, fsolve, brentq

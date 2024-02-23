@@ -33,3 +33,13 @@ with open(file_path + "/ut_interp_dressed.pkl", "rb") as f:
 with open(file_path + "/ut_interp_dressed_101.pkl", "rb") as f:
     ut_interp_dressed_101 = pickle.load(f)
 
+with open(file_path + "/ut_interp_nfw_thresh.pkl", "rb") as f:
+    ut_interp_nfw_thresh = pickle.load(f)
+
+with open(file_path + "/ut_interp_axion_thresh.pkl", "rb") as f:
+    ut_interp_axion_thresh = pickle.load(f)
+
+with open(file_path + "/ut_interp_dressed_thresh.pkl", "rb") as f:
+    ut_interp_dressed_thresh = pickle.load(f)
+
+

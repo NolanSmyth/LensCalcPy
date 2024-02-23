@@ -9,7 +9,8 @@ __all__ = ['ut_interp', 'ut_interp_mw', 'ut_interp_rho', 'u_fwhm_interp', 'ut_in
            'magnification', 'magnification_wave', 'displacement', 'integrand_polar_wave', 'integrand_polar',
            'magnification_finite_wave', 'magnification_finite', 'u_t_finite', 'u_t_point', 'u_t_finite_wave',
            'make_ut_interp', 'u_t_nfw', 'u_t_nfw_101', 'u_t_axion', 'u_t_axion_101', 'u_t_dressed', 'u_t_dressed_101',
-           'ut_func_new', 'f_func', 't_fwhm_gondolo', 'uhm_point', 't_e_from_fwhm']
+           'u_t_nfw_thresh', 'u_t_axion_thresh', 'u_t_dressed_thresh', 'ut_func_new', 'f_func', 't_fwhm_gondolo',
+           'uhm_point', 't_e_from_fwhm']
 
 # %% ../nbs/04_utils.ipynb 3
 from .parameters import *
@@ -327,7 +328,43 @@ def u_t_dressed_101(rho, r90):
         rho = ut_interp_dressed_101.grid[0][0]
     return ut_interp_dressed_101((rho, r90))
 
-# %% ../nbs/04_utils.ipynb 16
+# %% ../nbs/04_utils.ipynb 10
+def u_t_nfw_thresh(rho, r90):
+    if r90 > ut_interp_nfw_thresh.grid[1][-1]:
+        return 0
+    elif r90 < ut_interp_nfw_thresh.grid[1][0]:
+        r90 = ut_interp_nfw_thresh.grid[1][0]
+    if rho > ut_interp_nfw_thresh.grid[0][-1]:
+        return 0
+    elif rho < ut_interp_nfw_thresh.grid[0][0]:
+        rho = ut_interp_nfw_thresh.grid[0][0]
+    return ut_interp_nfw_thresh((rho, r90))
+
+def u_t_axion_thresh(rho, r90):
+    if r90 > ut_interp_axion_thresh.grid[1][-1]:
+        return 0
+    elif r90 < ut_interp_axion_thresh.grid[1][0]:
+        r90 = ut_interp_axion_thresh.grid[1][0]
+    if rho > ut_interp_axion_thresh.grid[0][-1]:
+        return 0
+    elif rho < ut_interp_axion_thresh.grid[0][0]:
+        rho = ut_interp_axion_thresh.grid[0][0]
+    return ut_interp_axion_thresh((rho, r90))
+
+def u_t_dressed_thresh(rho, r90):
+    if r90 > ut_interp_dressed_thresh.grid[1][-1]:
+        return 0
+    elif r90 < ut_interp_dressed_thresh.grid[1][0]:
+        r90 = ut_interp_dressed_thresh.grid[1][0]
+    if rho > ut_interp_dressed_thresh.grid[0][-1]:
+        return 0
+    elif rho < ut_interp_dressed_thresh.grid[0][0]:
+        rho = ut_interp_dressed_thresh.grid[0][0]
+    return ut_interp_dressed_thresh((rho, r90))
+
+
+
+# %% ../nbs/04_utils.ipynb 17
 #Ratio of angular extent of source and lens in plane of lens
 # rho == theta_s/theta_l
 rho_min = 0.1
@@ -343,7 +380,7 @@ A_thresh_max = 1.34
 A_threshs = np.linspace(A_thresh_min, A_thresh_max, 40)
 
 
-# %% ../nbs/04_utils.ipynb 18
+# %% ../nbs/04_utils.ipynb 19
 def ut_func_new(rho, A_thresh):
     # rho = np.asarray(rho) 
     rho = np.atleast_1d(rho) # Ensure rho is at least 1-dimensional
@@ -352,7 +389,7 @@ def ut_func_new(rho, A_thresh):
     # return ut_interp_rho(rho)
     return ut_interp_rho(rho, A_thresh)
 
-# %% ../nbs/04_utils.ipynb 33
+# %% ../nbs/04_utils.ipynb 34
 def f_func(x):
     return (2 + x)/(x*(4+x))**(0.5) - 1
     
