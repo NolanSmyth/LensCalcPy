@@ -363,19 +363,21 @@ def differential_rate_integrand(l, b, dl, ds, umin, t, u_t, mass, model, finite=
     ut = u_t
     if ut <= umin:
         return 0
+    t_e_jacobian = 1
     if t_e: 
         #Calculate radial velocity in terms of einstein crossing time
         v_rad = einstein_rad(dl, mass, ds) * kpctokm / (t * htosec) 
         # t_duration = max(ut, umin_upper_bound(dl, ds, mass ,u_t)) * 2 * einstein_rad(dl, mass) * kpctokm / v_rad / htosec #event duration in hours
         t_duration = ut * 2 * einstein_rad(dl, mass, ds) * kpctokm / v_rad / htosec #event duration in hours
+        t_e_jacobian = 2*np.sqrt(ut**2-umin**2)
         if t_duration > tmax or t_duration < tmin:
             return 0     
     else:
-        #Calculate radial velocity in terms of event duration (t_fwhm)
+        #Calculate radial velocity in terms of event duration (t_hat)
         v_rad = velocity_radial(dl, ds, mass, umin, t * htosec, ut) 
     if v_disp is None: 
         v_disp = model.velocity_dispersion_dm(r)
-    return 2 * (1 / (ut**2 - umin**2)**0.5 *
+    return 2 * t_e_jacobian * (1 / (ut**2 - umin**2)**0.5 *
             model.density_dm(dl, l, b) / (mass * v_disp**2) *  
             v_rad**4 * (htosec / kpctokm)**2 *
             np.exp(-(v_rad**2 / v_disp**2)) *
