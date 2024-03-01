@@ -149,6 +149,16 @@ class MilkyWayModel(Galaxy):
     def velocity_dispersion_stars(self, r, v_c: float = 30):
         #Take 30 km/s following table 2 of https://arxiv.org/pdf/2306.12464.pdf
         return v_c
+    
+    def velocity_dispersion_dm(self, r, v_c: float = 220):
+        return v_c
+    
+    def mass_dm(self, r):
+        c = r / rs
+        return 4 * np.pi * rhoc * rs**3 * (np.log(1 + c) - c / (1 + c))
+
+    def velocity_dispersion_nfw(self, r):
+        return np.sqrt(G * self.mass_dm(r) / r)
 
 
 # %% ../nbs/08_galaxy.ipynb 7
@@ -202,3 +212,14 @@ class M31Model(Galaxy):
     def velocity_dispersion_stars(self, r, v_c: float = 60) -> float:
         # Use 60 km/s for disk following https://iopscience.iop.org/article/10.1088/0004-637X/695/1/442/pdf
         return v_c
+    
+    def velocity_dispersion_dm(self, r, v_c: float = 250):
+        return v_c
+    
+    def mass_dm(self, r):
+        c = r/rsM31
+        return 4 * np.pi * rhocM31 * rsM31**3 * (np.log(1 + c) - c / (1 + c))
+    
+    def velocity_dispersion_nfw(self, r):
+        return np.sqrt(G * self.mass_dm(r) / r)
+    

@@ -1,6 +1,15 @@
 _docs/
 _proc/
 
+examples/tess_dat
+examples/popsycle_data
+examples/interps
+examples/bounds
+examples/figures
+examples/draft_figures
+examples/r90_data
+examples/extended_dat
+
 *.bak
 .gitattributes
 .last_checked
