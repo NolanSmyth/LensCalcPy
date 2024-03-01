@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 
 from fastcore.test import *
 
-# %% ../nbs/00_pbh.ipynb 5
+# %% ../nbs/00_pbh.ipynb 6
 class Pbh(Lens):
     """A class to represent a PBH population"""
 
