@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.550">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="This module includes utility functions that are used across multiple modules, such as coordinate transformations, interpolation functions, and statistical analysis tools.">
+
+<title>LensCalcPy - utils</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="LensCalcPy - utils">
+<meta property="og:description" content="This module includes utility functions that are used across multiple modules, such as coordinate transformations, interpolation functions, and statistical analysis tools.">
+<meta property="og:site_name" content="LensCalcPy">
+<meta name="twitter:title" content="LensCalcPy - utils">
+<meta name="twitter:description" content="This module includes utility functions that are used across multiple modules, such as coordinate transformations, interpolation functions, and statistical analysis tools.">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">LensCalcPy</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./utils.html">utils</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">LensCalcPy</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pbh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">pbh</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ffp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ffp</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mw.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">core</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./survey.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">survey</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">utils</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./parameters.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parameters</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stats.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stats</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./lens.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">lens</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./galaxy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">galaxy</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./lightcurves.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">lightcurves</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#scientific_format" id="toc-scientific_format" class="nav-link active" data-scroll-target="#scientific_format">scientific_format</a></li>
+  <li><a href="#get_primed_coords" id="toc-get_primed_coords" class="nav-link" data-scroll-target="#get_primed_coords">get_primed_coords</a></li>
+  <li><a href="#event_duration" id="toc-event_duration" class="nav-link" data-scroll-target="#event_duration">event_duration</a></li>
+  <li><a href="#velocity_radial" id="toc-velocity_radial" class="nav-link" data-scroll-target="#velocity_radial">velocity_radial</a></li>
+  <li><a href="#einstein_rad" id="toc-einstein_rad" class="nav-link" data-scroll-target="#einstein_rad">einstein_rad</a></li>
+  <li><a href="#dist" id="toc-dist" class="nav-link" data-scroll-target="#dist">dist</a></li>
+  <li><a href="#velocity_dispersion_m31" id="toc-velocity_dispersion_m31" class="nav-link" data-scroll-target="#velocity_dispersion_m31">velocity_dispersion_m31</a></li>
+  <li><a href="#velocity_dispersion_mw" id="toc-velocity_dispersion_mw" class="nav-link" data-scroll-target="#velocity_dispersion_mw">velocity_dispersion_mw</a></li>
+  <li><a href="#mass_enclosed_m31" id="toc-mass_enclosed_m31" class="nav-link" data-scroll-target="#mass_enclosed_m31">mass_enclosed_m31</a></li>
+  <li><a href="#mass_enclosed_mw" id="toc-mass_enclosed_mw" class="nav-link" data-scroll-target="#mass_enclosed_mw">mass_enclosed_mw</a></li>
+  <li><a href="#density_m31" id="toc-density_m31" class="nav-link" data-scroll-target="#density_m31">density_m31</a></li>
+  <li><a href="#density_mw" id="toc-density_mw" class="nav-link" data-scroll-target="#density_mw">density_mw</a></li>
+  <li><a href="#dist_m31" id="toc-dist_m31" class="nav-link" data-scroll-target="#dist_m31">dist_m31</a></li>
+  <li><a href="#dist_mw" id="toc-dist_mw" class="nav-link" data-scroll-target="#dist_mw">dist_mw</a></li>
+  <li><a href="#make_ut_interp" id="toc-make_ut_interp" class="nav-link" data-scroll-target="#make_ut_interp">make_ut_interp</a></li>
+  <li><a href="#u_t_finite_wave" id="toc-u_t_finite_wave" class="nav-link" data-scroll-target="#u_t_finite_wave">u_t_finite_wave</a></li>
+  <li><a href="#u_t_point" id="toc-u_t_point" class="nav-link" data-scroll-target="#u_t_point">u_t_point</a></li>
+  <li><a href="#u_t_finite" id="toc-u_t_finite" class="nav-link" data-scroll-target="#u_t_finite">u_t_finite</a></li>
+  <li><a href="#magnification_finite" id="toc-magnification_finite" class="nav-link" data-scroll-target="#magnification_finite">magnification_finite</a></li>
+  <li><a href="#magnification_finite_wave" id="toc-magnification_finite_wave" class="nav-link" data-scroll-target="#magnification_finite_wave">magnification_finite_wave</a></li>
+  <li><a href="#integrand_polar" id="toc-integrand_polar" class="nav-link" data-scroll-target="#integrand_polar">integrand_polar</a></li>
+  <li><a href="#integrand_polar_wave" id="toc-integrand_polar_wave" class="nav-link" data-scroll-target="#integrand_polar_wave">integrand_polar_wave</a></li>
+  <li><a href="#displacement" id="toc-displacement" class="nav-link" data-scroll-target="#displacement">displacement</a></li>
+  <li><a href="#magnification_wave" id="toc-magnification_wave" class="nav-link" data-scroll-target="#magnification_wave">magnification_wave</a></li>
+  <li><a href="#magnification" id="toc-magnification" class="nav-link" data-scroll-target="#magnification">magnification</a></li>
+  <li><a href="#rho_func" id="toc-rho_func" class="nav-link" data-scroll-target="#rho_func">rho_func</a></li>
+  <li><a href="#w_func" id="toc-w_func" class="nav-link" data-scroll-target="#w_func">w_func</a></li>
+  <li><a href="#u_t_dressed_101" id="toc-u_t_dressed_101" class="nav-link" data-scroll-target="#u_t_dressed_101">u_t_dressed_101</a></li>
+  <li><a href="#u_t_dressed" id="toc-u_t_dressed" class="nav-link" data-scroll-target="#u_t_dressed">u_t_dressed</a></li>
+  <li><a href="#u_t_axion_101" id="toc-u_t_axion_101" class="nav-link" data-scroll-target="#u_t_axion_101">u_t_axion_101</a></li>
+  <li><a href="#u_t_axion" id="toc-u_t_axion" class="nav-link" data-scroll-target="#u_t_axion">u_t_axion</a></li>
+  <li><a href="#u_t_nfw_101" id="toc-u_t_nfw_101" class="nav-link" data-scroll-target="#u_t_nfw_101">u_t_nfw_101</a></li>
+  <li><a href="#u_t_nfw" id="toc-u_t_nfw" class="nav-link" data-scroll-target="#u_t_nfw">u_t_nfw</a></li>
+  <li><a href="#u_t_dressed_thresh" id="toc-u_t_dressed_thresh" class="nav-link" data-scroll-target="#u_t_dressed_thresh">u_t_dressed_thresh</a></li>
+  <li><a href="#u_t_axion_thresh" id="toc-u_t_axion_thresh" class="nav-link" data-scroll-target="#u_t_axion_thresh">u_t_axion_thresh</a></li>
+  <li><a href="#u_t_nfw_thresh" id="toc-u_t_nfw_thresh" class="nav-link" data-scroll-target="#u_t_nfw_thresh">u_t_nfw_thresh</a></li>
+  <li><a href="#ut_func_new" id="toc-ut_func_new" class="nav-link" data-scroll-target="#ut_func_new">ut_func_new</a></li>
+  <li><a href="#testing-finite-size-effects" id="toc-testing-finite-size-effects" class="nav-link" data-scroll-target="#testing-finite-size-effects">Testing finite size effects</a></li>
+  <li><a href="#fwhm-conversions" id="toc-fwhm-conversions" class="nav-link" data-scroll-target="#fwhm-conversions">FWHM Conversions</a></li>
+  <li><a href="#t_e_from_fwhm" id="toc-t_e_from_fwhm" class="nav-link" data-scroll-target="#t_e_from_fwhm">t_e_from_fwhm</a></li>
+  <li><a href="#uhm_point" id="toc-uhm_point" class="nav-link" data-scroll-target="#uhm_point">uhm_point</a></li>
+  <li><a href="#t_fwhm_gondolo" id="toc-t_fwhm_gondolo" class="nav-link" data-scroll-target="#t_fwhm_gondolo">t_fwhm_gondolo</a></li>
+  <li><a href="#f_func" id="toc-f_func" class="nav-link" data-scroll-target="#f_func">f_func</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/NolanSmyth/LensCalcPy/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">utils</h1>
+</div>
+
+<div>
+  <div class="description">
+    This module includes utility functions that are used across multiple modules, such as coordinate transformations, interpolation functions, and statistical analysis tools.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L141" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="scientific_format" class="level3">
+<h3 class="anchored" data-anchor-id="scientific_format">scientific_format</h3>
+<blockquote class="blockquote">
+<pre><code> scientific_format (x, pos)</code></pre>
+</blockquote>
+<p>Formats a number in scientific notation in latex</p>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L118" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="get_primed_coords" class="level3">
+<h3 class="anchored" data-anchor-id="get_primed_coords">get_primed_coords</h3>
+<blockquote class="blockquote">
+<pre><code> get_primed_coords (d:float, l:float=121.2, b:float=-21.6)</code></pre>
+</blockquote>
+<p>Get galactocentric coordinates x’, y’ given galactic latitude and longitude l, b, and distance d</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td></td>
+<td>distance from Sun in km</td>
+</tr>
+<tr class="even">
+<td>l</td>
+<td>float</td>
+<td>121.2</td>
+<td>galactic longitude in degrees</td>
+</tr>
+<tr class="odd">
+<td>b</td>
+<td>float</td>
+<td>-21.6</td>
+<td>galactic latitude in degrees</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>tuple</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L101" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="event_duration" class="level3">
+<h3 class="anchored" data-anchor-id="event_duration">event_duration</h3>
+<blockquote class="blockquote">
+<pre><code> event_duration (d:float, mass:float, umin:float, v_rel:float, ut:float,
+                 ds:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td>mass</td>
+<td>float</td>
+<td>mass of the lens in Msun</td>
+</tr>
+<tr class="odd">
+<td>umin</td>
+<td>float</td>
+<td>minimum impact parameter</td>
+</tr>
+<tr class="even">
+<td>v_rel</td>
+<td>float</td>
+<td>transverse velocity in km/s</td>
+</tr>
+<tr class="odd">
+<td>ut</td>
+<td>float</td>
+<td>threshold impact parameter</td>
+</tr>
+<tr class="even">
+<td>ds</td>
+<td>float</td>
+<td>distance to the source in kpc</td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>event duration in seconds</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L92" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="velocity_radial" class="level3">
+<h3 class="anchored" data-anchor-id="velocity_radial">velocity_radial</h3>
+<blockquote class="blockquote">
+<pre><code> velocity_radial (d:float, mass:float, umin:float, t:float, ut:float,
+                  ds:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td>mass</td>
+<td>float</td>
+<td>mass of the lens in Msun</td>
+</tr>
+<tr class="odd">
+<td>umin</td>
+<td>float</td>
+<td>minimum impact parameter</td>
+</tr>
+<tr class="even">
+<td>t</td>
+<td>float</td>
+<td>crossing time in hours</td>
+</tr>
+<tr class="odd">
+<td>ut</td>
+<td>float</td>
+<td>threshold impact parameter</td>
+</tr>
+<tr class="even">
+<td>ds</td>
+<td>float</td>
+<td>distance to the source in kpc</td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>radial velocity in km/s</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L86" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="einstein_rad" class="level3">
+<h3 class="anchored" data-anchor-id="einstein_rad">einstein_rad</h3>
+<blockquote class="blockquote">
+<pre><code> einstein_rad (d:float, mass:float, ds:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td>mass</td>
+<td>float</td>
+<td>mass of the lens in Msun</td>
+</tr>
+<tr class="odd">
+<td>ds</td>
+<td>float</td>
+<td>distance to the source in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>Einstein radius in kpc</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L79" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="dist" class="level3">
+<h3 class="anchored" data-anchor-id="dist">dist</h3>
+<blockquote class="blockquote">
+<pre><code> dist (d:float, ds:float=770)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Default</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td></td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td>ds</td>
+<td>float</td>
+<td>770</td>
+<td>distance to the source in kpc</td>
+</tr>
+<tr class="odd">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td></td>
+<td><strong>weighted lensing distance in kpc</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L73" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="velocity_dispersion_m31" class="level3">
+<h3 class="anchored" data-anchor-id="velocity_dispersion_m31">velocity_dispersion_m31</h3>
+<blockquote class="blockquote">
+<pre><code> velocity_dispersion_m31 (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance from the M31 center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>velocity dispersion in km/s</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L67" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="velocity_dispersion_mw" class="level3">
+<h3 class="anchored" data-anchor-id="velocity_dispersion_mw">velocity_dispersion_mw</h3>
+<blockquote class="blockquote">
+<pre><code> velocity_dispersion_mw (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance from the MW center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>velocity dispersion in km/s</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L63" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="mass_enclosed_m31" class="level3">
+<h3 class="anchored" data-anchor-id="mass_enclosed_m31">mass_enclosed_m31</h3>
+<blockquote class="blockquote">
+<pre><code> mass_enclosed_m31 (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance to M31 center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>enclosed DM mass in Msun</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L59" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="mass_enclosed_mw" class="level3">
+<h3 class="anchored" data-anchor-id="mass_enclosed_mw">mass_enclosed_mw</h3>
+<blockquote class="blockquote">
+<pre><code> mass_enclosed_mw (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance to MW center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>enclosed DM mass in Msun</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L55" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="density_m31" class="level3">
+<h3 class="anchored" data-anchor-id="density_m31">density_m31</h3>
+<blockquote class="blockquote">
+<pre><code> density_m31 (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance to M31 center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>DM density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L51" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="density_mw" class="level3">
+<h3 class="anchored" data-anchor-id="density_mw">density_mw</h3>
+<blockquote class="blockquote">
+<pre><code> density_mw (r:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>r</td>
+<td>float</td>
+<td>distance to MW center in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>DM density in Msun/kpc^3</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L47" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="dist_m31" class="level3">
+<h3 class="anchored" data-anchor-id="dist_m31">dist_m31</h3>
+<blockquote class="blockquote">
+<pre><code> dist_m31 (d:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>distance to the M31 center in kpc</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L43" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="dist_mw" class="level3">
+<h3 class="anchored" data-anchor-id="dist_mw">dist_mw</h3>
+<blockquote class="blockquote">
+<pre><code> dist_mw (d:float)</code></pre>
+</blockquote>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Type</strong></th>
+<th><strong>Details</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>d</td>
+<td>float</td>
+<td>distance from the Sun in kpc</td>
+</tr>
+<tr class="even">
+<td><strong>Returns</strong></td>
+<td><strong>float</strong></td>
+<td><strong>distance to the MW center in kpc</strong></td>
+</tr>
+</tbody>
+</table>
+<div id="cell-16" class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#sanity checks</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>test_eq(mass_enclosed_m31(<span class="dv">0</span>), <span class="dv">0</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>test_eq(mass_enclosed_mw(<span class="dv">0</span>), <span class="dv">0</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>test_eq(velocity_dispersion_m31(<span class="dv">0</span>), <span class="dv">0</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>test_eq(velocity_dispersion_mw(<span class="dv">0</span>), <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-17" class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test that galactic center is at (0, 0, 0) for l=b=0</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>test_eq(get_primed_coords(rEarth, <span class="dv">0</span>, <span class="dv">0</span>), (<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#test that earth's distance from galactic center is rEarth, even in primed coordinates</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>test_close(np.<span class="bu">sum</span>(np.array(get_primed_coords(<span class="dv">0</span>))<span class="op">**</span><span class="dv">2</span>)<span class="op">**</span>(<span class="dv">1</span><span class="op">/</span><span class="dv">2</span>), rEarth)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#test eq.4 of appendix in https://arxiv.org/pdf/1701.02151.pdf</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>test_close(einstein_rad(<span class="dv">100</span>, <span class="fl">1e-8</span>, dsM31)<span class="op">*</span>(<span class="dv">3600</span> <span class="op">*</span> <span class="dv">180</span> <span class="op">/</span> np.pi)<span class="op">/</span><span class="dv">100</span>, <span class="fl">3e-8</span>, eps<span class="op">=</span><span class="fl">1e-8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L246" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="make_ut_interp" class="level3">
+<h3 class="anchored" data-anchor-id="make_ut_interp">make_ut_interp</h3>
+<blockquote class="blockquote">
+<pre><code> make_ut_interp (n_points=40, ds=770, A_thresh=1.34)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L233" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_finite_wave" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_finite_wave">u_t_finite_wave</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_finite_wave (m_pbh, lam, dl, ds, A_thresh=1.34)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L224" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_point" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_point">u_t_point</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_point (A_thresh=1.34)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L214" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_finite" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_finite">u_t_finite</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_finite (m_pbh, dl, ds, A_thresh=1.34)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L207" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="magnification_finite" class="level3">
+<h3 class="anchored" data-anchor-id="magnification_finite">magnification_finite</h3>
+<blockquote class="blockquote">
+<pre><code> magnification_finite (m_pbh, u, dl, ds)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L200" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="magnification_finite_wave" class="level3">
+<h3 class="anchored" data-anchor-id="magnification_finite_wave">magnification_finite_wave</h3>
+<blockquote class="blockquote">
+<pre><code> magnification_finite_wave (m_pbh, lam, u, dl, ds)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L194" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="integrand_polar" class="level3">
+<h3 class="anchored" data-anchor-id="integrand_polar">integrand_polar</h3>
+<blockquote class="blockquote">
+<pre><code> integrand_polar (r, theta, u)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L189" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="integrand_polar_wave" class="level3">
+<h3 class="anchored" data-anchor-id="integrand_polar_wave">integrand_polar_wave</h3>
+<blockquote class="blockquote">
+<pre><code> integrand_polar_wave (r, theta, w, u)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L185" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="displacement" class="level3">
+<h3 class="anchored" data-anchor-id="displacement">displacement</h3>
+<blockquote class="blockquote">
+<pre><code> displacement (x, y, u)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L179" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="magnification_wave" class="level3">
+<h3 class="anchored" data-anchor-id="magnification_wave">magnification_wave</h3>
+<blockquote class="blockquote">
+<pre><code> magnification_wave (w, u)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L169" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="magnification" class="level3">
+<h3 class="anchored" data-anchor-id="magnification">magnification</h3>
+<blockquote class="blockquote">
+<pre><code> magnification (u)</code></pre>
+</blockquote>
+<p>Compute the magnification given the impact parameter ‘u’ in the point-source-point-lens limit.</p>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L157" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="rho_func" class="level3">
+<h3 class="anchored" data-anchor-id="rho_func">rho_func</h3>
+<blockquote class="blockquote">
+<pre><code> rho_func (m_pbh, dl, ds)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L153" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="w_func" class="level3">
+<h3 class="anchored" data-anchor-id="w_func">w_func</h3>
+<blockquote class="blockquote">
+<pre><code> w_func (m_pbh, lam)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L320" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_dressed_101" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_dressed_101">u_t_dressed_101</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_dressed_101 (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L309" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_dressed" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_dressed">u_t_dressed</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_dressed (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L298" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_axion_101" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_axion_101">u_t_axion_101</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_axion_101 (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L287" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_axion" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_axion">u_t_axion</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_axion (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L276" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_nfw_101" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_nfw_101">u_t_nfw_101</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_nfw_101 (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L265" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_nfw" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_nfw">u_t_nfw</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_nfw (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L354" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_dressed_thresh" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_dressed_thresh">u_t_dressed_thresh</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_dressed_thresh (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L343" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_axion_thresh" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_axion_thresh">u_t_axion_thresh</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_axion_thresh (rho, r90)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L332" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="u_t_nfw_thresh" class="level3">
+<h3 class="anchored" data-anchor-id="u_t_nfw_thresh">u_t_nfw_thresh</h3>
+<blockquote class="blockquote">
+<pre><code> u_t_nfw_thresh (rho, r90)</code></pre>
+</blockquote>
+<div id="cell-40" class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>u_t_nfw(<span class="dv">1</span>,<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>array(3.87074043)</code></pre>
+</div>
+</div>
+<div id="cell-41" class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>magnification(<span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>2.182820625326997</code></pre>
+</div>
+</div>
+<div id="cell-42" class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> <span class="fl">1e-7</span> <span class="co">#mars mass</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>d_arr <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="fl">769.9</span>, <span class="dv">1000</span>)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>rho_arr <span class="op">=</span> np.array([rho_func(m, d, ds) <span class="cf">for</span> d <span class="kw">in</span> d_arr])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-43" class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, rho_arr, label<span class="op">=</span><span class="vs">r"$\rho = \Theta_s/\Theta_E$"</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"dl (kpc)"</span>)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylabel(r"$\rho = \Theta_s/\Theta_E$")</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(d_arr, ut_interp(d_arr, m), label="u_t")</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>plt.axvline(d_arr[np.where(rho_arr <span class="op">&gt;=</span> <span class="dv">2</span>)[<span class="dv">0</span>][<span class="dv">0</span>]], ls<span class="op">=</span><span class="st">"--"</span>, color<span class="op">=</span><span class="st">"k"</span>)</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="dv">720</span>, <span class="dv">769</span>)</span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-43-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-44" class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>plt.plot(d_arr, <span class="dv">1</span> <span class="op">+</span> <span class="dv">2</span><span class="op">/</span>(rho_arr)<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"dl (kpc)"</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Peak Finite Magnification"</span>)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-44-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-45" class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> magnification_finite_new(u, rho):</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    integrand <span class="op">=</span> <span class="kw">lambda</span> r, theta: integrand_polar(r, theta, u)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    result, _ <span class="op">=</span> nquad(integrand, [[<span class="dv">0</span>, rho], [<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> pi]])</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result <span class="op">/</span> (pi <span class="op">*</span> rho<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> u_t_finite_new(rho, A_thresh<span class="op">=</span><span class="fl">1.34</span>):</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    func <span class="op">=</span> <span class="kw">lambda</span> u: magnification_finite_new(u,rho) <span class="op">-</span> A_thresh</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    u_min <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    u_max <span class="op">=</span> <span class="dv">15</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> brentq(func, u_min, u_max)</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-46" class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_u_t(args):</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    rho, A_thresh <span class="op">=</span> args</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> u_t_finite_new(rho, A_thresh)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>args_list <span class="op">=</span> [(rho, A_thresh) <span class="cf">for</span> rho <span class="kw">in</span> rhos <span class="cf">for</span> A_thresh <span class="kw">in</span> A_threshs]</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> Pool() <span class="im">as</span> p:</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    u_ts_flat <span class="op">=</span> p.<span class="bu">map</span>(compute_u_t, args_list)</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>u_ts_new <span class="op">=</span> np.array(u_ts_flat).reshape(<span class="bu">len</span>(rhos), <span class="bu">len</span>(A_threshs))</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>ut_interp_rho <span class="op">=</span> interp2d(rhos, A_threshs, u_ts_new.T)</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'../LensCalcPy/interpolations/ut_interp_rho.pkl'</span>, <span class="st">'wb'</span>) <span class="im">as</span> f:</span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>    pickle.dump(ut_interp_rho, f)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/qd/09mj47cx551c65glw6y47d6r0000gn/T/ipykernel_70250/3744683341.py:11: DeprecationWarning: `interp2d` is deprecated!
+`interp2d` is deprecated in SciPy 1.10 and will be removed in SciPy 1.13.0.
+
+For legacy code, nearly bug-for-bug compatible replacements are
+`RectBivariateSpline` on regular grids, and `bisplrep`/`bisplev` for
+scattered 2D data.
+
+In new code, for regular grids use `RegularGridInterpolator` instead.
+For scattered data, prefer `LinearNDInterpolator` or
+`CloughTocher2DInterpolator`.
+
+For more details see
+`https://scipy.github.io/devdocs/notebooks/interp_transition_guide.html`
+
+  ut_interp_rho = interp2d(rhos, A_threshs, u_ts_new.T)</code></pre>
+</div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L384" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="ut_func_new" class="level3">
+<h3 class="anchored" data-anchor-id="ut_func_new">ut_func_new</h3>
+<blockquote class="blockquote">
+<pre><code> ut_func_new (rho, A_thresh)</code></pre>
+</blockquote>
+<div id="cell-48" class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>plt.plot(rhos, ut_interp_rho(rhos, <span class="fl">1.34</span>))</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>plt.plot(rhos, ut_interp_rho(rhos, <span class="fl">1.01</span>))</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r'$\rho$'</span>)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r'$u_t$'</span>)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/qd/09mj47cx551c65glw6y47d6r0000gn/T/ipykernel_70250/2914777924.py:1: DeprecationWarning:         `interp2d` is deprecated!
+        `interp2d` is deprecated in SciPy 1.10 and will be removed in SciPy 1.13.0.
+
+        For legacy code, nearly bug-for-bug compatible replacements are
+        `RectBivariateSpline` on regular grids, and `bisplrep`/`bisplev` for
+        scattered 2D data.
+
+        In new code, for regular grids use `RegularGridInterpolator` instead.
+        For scattered data, prefer `LinearNDInterpolator` or
+        `CloughTocher2DInterpolator`.
+
+        For more details see
+        `https://scipy.github.io/devdocs/notebooks/interp_transition_guide.html`
+
+  plt.plot(rhos, ut_interp_rho(rhos, 1.34))
+/var/folders/qd/09mj47cx551c65glw6y47d6r0000gn/T/ipykernel_70250/2914777924.py:2: DeprecationWarning:         `interp2d` is deprecated!
+        `interp2d` is deprecated in SciPy 1.10 and will be removed in SciPy 1.13.0.
+
+        For legacy code, nearly bug-for-bug compatible replacements are
+        `RectBivariateSpline` on regular grids, and `bisplrep`/`bisplev` for
+        scattered 2D data.
+
+        In new code, for regular grids use `RegularGridInterpolator` instead.
+        For scattered data, prefer `LinearNDInterpolator` or
+        `CloughTocher2DInterpolator`.
+
+        For more details see
+        `https://scipy.github.io/devdocs/notebooks/interp_transition_guide.html`
+
+  plt.plot(rhos, ut_interp_rho(rhos, 1.01))</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-48-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="testing-finite-size-effects" class="level3">
+<h3 class="anchored" data-anchor-id="testing-finite-size-effects">Testing finite size effects</h3>
+<div id="cell-50" class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>m_pbh_arr <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">9</span>, <span class="op">-</span><span class="dv">6</span>, <span class="dv">4</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>d_arr <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="fl">8.5</span>, <span class="dv">1000</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>rhos_calc <span class="op">=</span> [[rho_func(m, d, <span class="fl">8.51</span>) <span class="cf">for</span> d <span class="kw">in</span> d_arr] <span class="cf">for</span> m <span class="kw">in</span> m_pbh_arr]</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m, rhos <span class="kw">in</span> <span class="bu">zip</span>(m_pbh_arr, rhos_calc):</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    plt.plot(d_arr, ut_func_new(rhos,<span class="fl">1.34</span>), label<span class="op">=</span><span class="ss">f"$m= </span><span class="sc">{</span>m<span class="sc">:.2e}</span><span class="ss">$"</span>)</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">"log"</span>)</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">"log"</span>)</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e0</span>, <span class="dv">9</span>)</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">5e-1</span>, <span class="dv">2</span>)</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"d [kpc]"</span>)</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"$u_</span><span class="sc">{T}</span><span class="st">$"</span>)</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Finite size MW Center Source"</span>)</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-49-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-51" class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Test eq. 7 of https://arxiv.org/pdf/1905.06066.pdf</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>test_eq(magnification_wave(<span class="dv">2</span>, <span class="dv">0</span>), np.pi<span class="op">*</span><span class="dv">2</span><span class="op">/</span>(<span class="dv">1</span> <span class="op">-</span> np.exp(<span class="op">-</span>np.pi<span class="op">*</span><span class="dv">2</span>)))</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Test that for small wavelength, there is essentially no magnification</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>test_close(magnification_wave(<span class="fl">1e-5</span>, <span class="dv">1</span>),<span class="dv">1</span>, eps<span class="op">=</span><span class="fl">1e-3</span>)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Test that for large impact parameter, there is essentially no magnification</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>test_close(magnification_wave(<span class="dv">10</span>, <span class="dv">10</span>),<span class="dv">1</span>, eps<span class="op">=</span><span class="fl">1e-3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-52" class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>m_pbh <span class="op">=</span> <span class="fl">1e-11</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>lam <span class="op">=</span> <span class="dv">6000</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>dl <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> <span class="dv">770</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>A_thresh <span class="op">=</span> <span class="fl">1.34</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(magnification_finite_wave(m_pbh, lam, u, dl, ds))</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(u_t_finite_wave(m_pbh, lam, dl, ds))</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(u_t_finite(m_pbh, dl, ds))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1.4081218406030171
+1.0919519513342404
+1.0932816931111</code></pre>
+</div>
+</div>
+<div id="cell-53" class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>us <span class="op">=</span> np.linspace(<span class="dv">0</span>,<span class="dv">5</span>,<span class="dv">20</span>)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>mags_point <span class="op">=</span> [magnification(u) <span class="cf">for</span> u <span class="kw">in</span> us]</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>mags_finite <span class="op">=</span> [magnification_finite(m_pbh, u, <span class="dv">6</span>, ds) <span class="cf">for</span> u <span class="kw">in</span> us]</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>mags_finite_wave <span class="op">=</span> [magnification_finite_wave(m_pbh, lam, u, <span class="dv">1</span>, ds) <span class="cf">for</span> u <span class="kw">in</span> us]</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>ut_finite <span class="op">=</span> u_t_finite(m_pbh, <span class="dv">6</span>, ds)</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>ut_finite_wave <span class="op">=</span> u_t_finite_wave(m_pbh, lam, <span class="dv">1</span>, ds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-54" class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>plt.plot(us, mags_point, color<span class="op">=</span><span class="st">'orange'</span>, label<span class="op">=</span><span class="st">'Point'</span>)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>plt.plot(us, mags_finite, color<span class="op">=</span><span class="st">'blue'</span>, label<span class="op">=</span><span class="st">'Finite'</span>)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>plt.plot(us, mags_finite_wave, color<span class="op">=</span><span class="st">'red'</span>, label<span class="op">=</span><span class="st">'Finite + Wave'</span>)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>plt.axhline(y<span class="op">=</span>A_thresh, color<span class="op">=</span><span class="st">'gray'</span>, linestyle<span class="op">=</span><span class="st">'-.'</span>)</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>plt.axvline(x<span class="op">=</span>ut_finite, color<span class="op">=</span><span class="st">'blue'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>plt.axvline(x<span class="op">=</span>ut_finite_wave, color<span class="op">=</span><span class="st">'red'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>plt.axvline(x<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'orange'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="dv">0</span>,<span class="dv">5</span>)</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">0.6</span>,<span class="fl">2.0</span>)</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-53-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-55" class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>us <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">20</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> np.logspace(<span class="op">-</span><span class="dv">11</span>, <span class="op">-</span><span class="dv">9</span>, <span class="dv">3</span>):</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    mags <span class="op">=</span>[magnification_wave(w_func(m, lam), u) <span class="cf">for</span> u <span class="kw">in</span> us]</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    plt.plot(us, mags, label<span class="op">=</span><span class="ss">f'm=</span><span class="sc">{</span>m<span class="sc">:.2e}</span><span class="ss">'</span>)</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>plt.xscale(<span class="st">'log'</span>)</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>plt.yscale(<span class="st">'log'</span>)</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'u'</span>)</span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'magnification'</span>)</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="fl">1e-3</span>, <span class="fl">1e1</span>)</span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="fl">2e-3</span>, <span class="fl">3e3</span>)</span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-54-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="fwhm-conversions" class="level3">
+<h3 class="anchored" data-anchor-id="fwhm-conversions">FWHM Conversions</h3>
+<div id="cell-57" class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> magnification_finite_new(u, rho):</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    integrand <span class="op">=</span> <span class="kw">lambda</span> r, theta: integrand_polar(r, theta, u)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    result, _ <span class="op">=</span> nquad(integrand, [[<span class="dv">0</span>, rho], [<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> np.pi]])</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result <span class="op">/</span> (np.pi <span class="op">*</span> rho<span class="op">**</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-59" class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># u_vals = np.logspace(-2, 1, 29)</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>u_vals <span class="op">=</span> np.insert(np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">29</span>), <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>rho_vals <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">30</span>)</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>z_vals <span class="op">=</span> np.array([[magnification_finite_new(u, rho) <span class="cf">for</span> u <span class="kw">in</span> u_vals] <span class="cf">for</span> rho <span class="kw">in</span> tqdm(rho_vals)])</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>mag_finite_interp <span class="op">=</span> RegularGridInterpolator((rho_vals, u_vals), z_vals, method<span class="op">=</span><span class="st">'linear'</span>, bounds_error<span class="op">=</span><span class="va">False</span>, fill_value<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fast_magnification_finite_new(u, rho):</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mag_finite_interp([<span class="bu">float</span>(rho), <span class="bu">float</span>(u)])</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fast_u_fwhm_func(rho, umin):</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    Amax <span class="op">=</span> fast_magnification_finite_new(umin, rho)</span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> Amax<span class="op">&lt;</span><span class="dv">1</span>:</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span></span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>    func <span class="op">=</span> <span class="kw">lambda</span> u: fast_magnification_finite_new(u, rho) <span class="op">-</span> (<span class="dv">1</span><span class="op">+</span>(Amax<span class="op">-</span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>)</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fsolve(func, <span class="dv">1</span>)</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a>z_u_vals <span class="op">=</span> np.array([[fast_u_fwhm_func(rho, u) <span class="cf">for</span> u <span class="kw">in</span> u_vals] <span class="cf">for</span> rho <span class="kw">in</span> tqdm(rho_vals)])</span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a>u_fwhm_interp <span class="op">=</span> RegularGridInterpolator((rho_vals, u_vals), z_u_vals, method<span class="op">=</span><span class="st">'linear'</span>, bounds_error<span class="op">=</span><span class="va">False</span>, fill_value<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|██████████| 30/30 [01:53&lt;00:00,  3.79s/it]
+  0%|          | 0/30 [00:00&lt;?, ?it/s]/Users/nolansmyth/opt/anaconda3/lib/python3.9/site-packages/scipy/optimize/_minpack_py.py:177: RuntimeWarning: The iteration is not making good progress, as measured by the 
+  improvement from the last ten iterations.
+  warnings.warn(msg, RuntimeWarning)
+100%|██████████| 30/30 [00:00&lt;00:00, 40.36it/s]</code></pre>
+</div>
+</div>
+<div id="cell-60" class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># with open('../LensCalcPy/interpolations/u_fwhm_interp.pkl', 'wb') as f:</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="co">#     pickle.dump(u_fwhm_interp, f)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-61" class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>u_fwhm_interp([<span class="dv">15</span>,<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>array([[14.29405895]])</code></pre>
+</div>
+</div>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L407" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="t_e_from_fwhm" class="level3">
+<h3 class="anchored" data-anchor-id="t_e_from_fwhm">t_e_from_fwhm</h3>
+<blockquote class="blockquote">
+<pre><code> t_e_from_fwhm (t_fwhm, umin, finite, rho=None)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L402" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="uhm_point" class="level3">
+<h3 class="anchored" data-anchor-id="uhm_point">uhm_point</h3>
+<blockquote class="blockquote">
+<pre><code> uhm_point (umin)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L396" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="t_fwhm_gondolo" class="level3">
+<h3 class="anchored" data-anchor-id="t_fwhm_gondolo">t_fwhm_gondolo</h3>
+<blockquote class="blockquote">
+<pre><code> t_fwhm_gondolo (t_e, umin)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/NolanSmyth/LensCalcPy/blob/main/LensCalcPy/utils.py#L393" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="f_func" class="level3">
+<h3 class="anchored" data-anchor-id="f_func">f_func</h3>
+<blockquote class="blockquote">
+<pre><code> f_func (x)</code></pre>
+</blockquote>
+<div id="cell-66" class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>rho<span class="op">=</span><span class="fl">0.02</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>u_hms <span class="op">=</span> np.array([u_fwhm_interp([rho, umin])[<span class="dv">0</span>] <span class="cf">for</span> umin <span class="kw">in</span> u_vals])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-67" class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>plt.loglog(u_vals, u_hms)</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>plt.plot(u_vals, u_vals, ls<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>plt.axhline(y<span class="op">=</span>rho, color<span class="op">=</span><span class="st">'k'</span>, ls<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r'$u_</span><span class="sc">{min}</span><span class="vs">$'</span>)</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r'$u_</span><span class="sc">{hm}</span><span class="vs">$'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Text(0, 0.5, '$u_{hm}$')</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-65-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-68" class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>u_min <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>rho<span class="op">=</span><span class="fl">0.1</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>t_fwhms <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">30</span>)</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>t_es_point <span class="op">=</span> np.array([t_e_from_fwhm(t_fwhms, u_min, finite<span class="op">=</span><span class="va">False</span>) <span class="cf">for</span> t_fwhms <span class="kw">in</span> t_fwhms])</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>t_es_finite <span class="op">=</span> np.array([t_e_from_fwhm(t_fwhms, u_min, finite<span class="op">=</span><span class="va">True</span>, rho<span class="op">=</span>rho) <span class="cf">for</span> t_fwhms <span class="kw">in</span> t_fwhms])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-69" class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(t_fwhms, t_es_point, label='Point')</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_es_finite, label<span class="op">=</span><span class="st">'Finite'</span>)</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_fwhms, label<span class="op">=</span><span class="st">'t_fwhm'</span>, ls<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'t_fwhm'</span>)</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'t_e'</span>)</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'u_min = '</span> <span class="op">+</span> <span class="bu">str</span>(u_min) <span class="op">+</span> <span class="st">', rho = '</span> <span class="op">+</span> <span class="bu">str</span>(rho))</span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-67-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-70" class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_es_point, label<span class="op">=</span><span class="st">'Point'</span>)</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_es_finite, label<span class="op">=</span><span class="st">'Finite'</span>)</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_fwhms, label<span class="op">=</span><span class="st">'t_fwhm'</span>, ls<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'t_fwhm'</span>)</span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'t_e'</span>)</span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'u_min = '</span> <span class="op">+</span> <span class="bu">str</span>(u_min) <span class="op">+</span> <span class="st">', rho = '</span> <span class="op">+</span> <span class="bu">str</span>(rho))</span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-68-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-71" class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_es_point, label<span class="op">=</span><span class="st">'Point'</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_es_finite, label<span class="op">=</span><span class="st">'Finite'</span>)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>plt.plot(t_fwhms, t_fwhms, label<span class="op">=</span><span class="st">'t_fwhm'</span>, ls<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'t_fwhm'</span>)</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'t_e'</span>)</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'u_min = '</span> <span class="op">+</span> <span class="bu">str</span>(u_min) <span class="op">+</span> <span class="st">', rho = '</span> <span class="op">+</span> <span class="bu">str</span>(rho))</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04_utils_files/figure-html/cell-69-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/NolanSmyth/LensCalcPy/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
